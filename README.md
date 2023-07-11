@@ -1,3 +1,149 @@
 # Openclassrooms Projet 9 
 # Thème : Développez une application Web en utilisant Django
 
+<h3 align="center">
+    <img alt="Logo" title="#logo" width="250px" src="/assets/16004297044411_P7.png">
+    <br>
+</h3>
+
+
+# OpenClassrooms Projet P9
+
+- [Objectif](#obj)
+- [Compétences](#competences)
+- [Technologies](#techs)
+- [Requirements](#reqs)
+- [Architecture](#architecture)
+- [Configuration locale](#localconfig)
+- [Tests](#tests)
+- [Présentation](#presentation)
+
+<a id="obj"></a>
+## Objectif
+
+La jeune startup LITReview a pour objectif de commercialiser un produit permettant à une communauté d'utilisateurs de consulter ou de solliciter une critique de livres à la demande.
+L'objectif du projet est de développer cette application Web en utilisant Django.
+
+<a id="competences"></a>
+## Compétences acquises
+- Développer une application web en utilisant Django
+- Utiliser le rendu côté serveur dans Django
+
+<a id="techs"></a>
+## Technologies Utilisées
+- [Python3](https://www.python.org/)
+- [Django](https://www.djangoproject.com/)
+- [Django] ()https://www.bootstrap.com/)
+
+<a id="reqs"></a>
+## Requirements
+- django
+- Pillow==9.5.0
+- django-crispy-forms==2.0
+- django-debug-toolbar==4.1.0
+
+<a id="architecture"></a>
+## Architecture et répertoires du projet
+```
+Project
+├── LITReview
+│   ├── litreview_app       \                           \
+│   ├── users                   \__ applications django
+│                               /
+│                              /
+│                             /
+│   ├── LITReview : répertoire du projet django
+│   │    ├── settings.py : fichier de réglages django
+│   │    ├── urls.py : fichier principal des endpoints
+│   │    ├── ..
+│   ├── media : répertoire de fichiers image
+│   ├── db.sqlite3 : base de données
+│   ├── manage.py : fichier principal de gestion django
+│
+|── requirements.txt
+|── documentation
+```
+
+<a id="localconfig"></a>
+## Configuration locale
+## Installation
+
+### 1. Récupération du projet sur la machine locale
+
+Clonez le repository sur la machine localement.
+
+```bash
+git clone https://github.com/EmeryKroquet/OC-P9_LITReview.git
+```
+
+Accédez au répertoire cloné.
+```bash
+cd OC-P9_LITReview
+```
+
+### 2. Création d'un environnement virtuel 
+Créez l'environnement virtuel env.
+```bash
+python3 -m venv venv
+```
+
+### 3. Activation et installation de l'environnement virtuel 
+
+Activez l'environnement virtuel venv nouvellement créé.
+```bash
+source env/bin/activate
+```
+
+Installez les paquets présents dans la liste requirements.txt.
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Initialisation de la base de données
+
+Accédez au dossier de travail.
+```bash
+cd litreview_project
+```
+
+Procédez à une recherche de migrations.
+```bash
+python manage.py makemigrations
+```
+
+Lancer les migrations nécessaires.
+```bash
+python manage.py migrate
+```
+
+## Utilisation
+
+### 1. Démarrage du serveur local
+
+Accédez au dossier de travail.
+```bash
+cd LITReview
+```
+
+Démarrez le serveur local.
+```bash
+python manage.py runserver
+```
+
+### 2. Navigation
+
+Accédez au site sur votre navigateur depuis l'url http://127.0.0.1:8000/
+
+<a id="tests"></a>
+### Tests
+
+Utilisez les identifiants de connexion suivant pour accéder et tester l'application.
+
+| Utilisateur           | Identifiant | Mot de passe |
+|-----------------------|-------------|--------------|
+| Utilisateur Principal | `admin`     | `admin`      |
+
+
+Voir la présentation pour en savoir plus sur les liens entre les utilisateurs de test.
+
+

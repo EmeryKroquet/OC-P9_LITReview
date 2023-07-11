@@ -193,16 +193,16 @@ class PostsView(LoginRequiredMixin, View):
                                                             'rating_range': RATING_RANGE,
                                                             'rating_char_on': RATING_CHAR_ON,
                                                             'rating_char_off': RATING_CHAR_OFF})
-
+@method_decorator(login_required, name='dispatch')
 class FollowersView(View):
     template_name = 'review/followers.html'
 
     def get(self, request):
-        nbar = 'followers'
+        nav_bar = 'followers'
         user = request.user
-        subscribers = UserFollows.objects.filter(followed_user=user.id)
-        subscriptions = UserFollows.objects.filter(user=user.id)
-        user_follow_instance = UserFollows()
+        user_follows = UserFollows.objects.filter(followed_user=user.id)
+        following = UserFollows.objects.filter(user=user.id)
+        user_follow = UserFollows()
         found_user = ""
 
         form = UserFollowsForm()
@@ -226,12 +226,12 @@ class FollowersView(View):
             if user != found_user:
                 user_follow_instance.save()
             else:
-                error_message = "You cannot follow yourself!"
+               error_message = "vous ne pouvez pas vous suivre!"
         except User.DoesNotExist:
             found_user = None
         except IntegrityError:
             found_user = None
-            error_message = "You're already following this user"
+            error_message = "Vous êtes déjà abonner à cet utilisateur"
         return render(request, self.template_name, locals())
 
 @method_decorator(login_required, name='dispatch')

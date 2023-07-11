@@ -24,11 +24,11 @@
         <p class="error__message">Vous n'êtes abonné à aucun utilisateur.</p>
         {% else %}
         <table class="subscriptions__table">
-            {% for subscription in subscriptions %}
+            {% for follow in followers %}
             <tr>
-                <td>{{ subscription.followed_user.username }}</td>
+                <td>{{ follow.followed_user.username }}</td>
                 <td>
-                    <a href="{% url 'delete_subscription' subscription.followed_user.id %}">Désabonner</a>
+                    <a href="{% url 'delete_user_follow' follow.followed_user.id %}">Désabonner</a>
                 </td>
             </tr>
             {% endfor %}
@@ -41,9 +41,9 @@
         <p class="error__message">Vous n'avez aucun abonné pour le moment.</p>
         {% else %}
         <table class="subscriptions__table">
-            {% for subscriber in subscribers %}
+            {% for user_follow in  user_follows %}
             <tr>
-                <td>{{ subscriber.username }}</td>
+                <td>{{ user_follow.username }}</td>
             </tr>
             {% endfor %}
         </table>

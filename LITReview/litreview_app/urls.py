@@ -21,7 +21,7 @@ urlpatterns = [
          views.TicketAndReviewView.as_view(), name='create_review_and_ticket'),
 
     path('followers/', views.FollowersView.as_view(), name='followers'),
-    path('followers/', views.DeleteFollowers.as_view(), name='delete_user_follow'),
+    path('delete_user_follow/', views.DeleteFollowers.as_view(), name='delete_user_follow'),
 
 
 ]
