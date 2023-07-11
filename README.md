@@ -1,4 +1,4 @@
-# Openclassrooms Projet 9 
+# Projet Academique Openclassrooms 
 # Thème : Développez une application Web en utilisant Django
 
 <h3 align="center">
