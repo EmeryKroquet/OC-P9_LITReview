@@ -1,0 +1,29 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+ <div class="col-md-10">
+
+    <div class="container p-4 my-4 border rounded">
+
+      {% if form.instance.id %}
+        <h2>Modify ticket {{form.instance.id}}</h2>
+        <form method="post" action="{% url 'create_ticket' ticket_id=form.instance.id %}" enctype="multipart/form-data">
+        <input type="hidden" name="next" value="/posts">
+      {% else %}
+        <h2>Créer un ticket</h2>
+        <form method="post" action="{% url 'create_ticket' %}" enctype="multipart/form-data">
+        <input type="hidden" name="next" value="/flux">
+      {% endif %}
+
+      {% csrf_token %}
+      {{ form|crispy }}
+      <button type="submit" class="btn btn-primary">Créer</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}

@@ -1,0 +1,59 @@
+
+<div class="card p-4 my-4">
+
+  {% if ticket.image %}
+
+    <img class="card-img-top" width="100%" src="{{ticket.image.url}}" role="img"
+         preserveAspectRatio="xMidYMid slice" focusable="false"></img>
+
+  {% endif %}
+
+  <div class="card-body">
+    <h5 class="card-title">{{ticket.title}}</h5>
+    <h6 class="card-subtitle mb-2 text-muted">
+        demandé par: {% if ticket.user == user %} Vous {% else %} {{ticket.user}} {% endif %}
+    </h6>
+    <h6 class="card-subtitle mb-2 text-muted">date: {{ticket.time_created}}</h6>
+    <p class="card-text">{{ticket.description}}</p>
+
+
+{% if request.resolver_match.url_name == 'feed' %}
+
+  {% if ticket in tickets_reviewed_by_user %}
+
+      <h6>Vous avez déjà consulté ce billet</h6>
+
+  {% else %}
+      <a href="{% url 'write_review_ticket' ticket_id=ticket.id %}" >
+          <button class="btn btn-primary btn-large">
+              Write a review
+          </button>
+      </a>
+
+  {% endif %}
+
+{% elif request.resolver_match.url_name == 'posts' %}
+
+    {% if ticket.user == user %}
+
+      <a href="{% url 'create_ticket' ticket_id=ticket.id%}" >
+        <button class="btn btn-primary btn-large">
+          Edit Ticket
+        </button>
+      </a>
+
+      <a href="{% url 'delete_ticket' ticket_id=ticket.id %}" >
+        <button class="btn btn-danger btn-large">
+          Delete Ticket
+        </button>
+      </a>
+
+
+
+    {% endif %}
+
+{% endif %}
+
+
+  </div>
+</div>

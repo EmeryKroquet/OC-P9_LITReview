@@ -1,0 +1,27 @@
+{% extends 'partials/base.html' %}
+{% block content %}
+	<div class="row">
+		<div class="col-11 col-md-4 mx-auto mt-5">
+			<h1>You have been logged out!</h1>
+			<div class="border-top pt-3">
+				<small class="text-muted">
+					<a href="{% url 'login' %}">Log in again</a>
+				</small>
+			</div>
+	</div>
+{% endblock content %}
+
+<!--
+{% extends 'partials/base.html' %}
+{% block content %}
+
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-sm text-center mb-5">
+                <p>Vous êtes déconnecté.</p>
+            </div>
+        </div>
+  </div>
+
+{% endblock %}
+-->

@@ -1,0 +1,42 @@
+{% extends "partials/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="container">
+    <h1 class="title">Créer une critique</h1>
+    <div class="center global__width global__margin__bottom">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="ticket__post not__reviewed">
+                <div class="vertical__display">
+                    <p>Livre / Article</p>
+                    {{ ticket_form.title|as_crispy_field }}
+
+                    {{ ticket_form.description|as_crispy_field }}
+                    <div class="row__display">
+                        {{ ticket_form.image|as_crispy_field }}
+                    </div>
+                </div>
+            </div>
+            <div class="review__post">
+                <div class="vertical__display">
+                    <p>Critique</p>
+                    {{ review_form.headline|as_crispy_field }}
+
+                    {{ review_form.rating|as_crispy_field }}
+
+                    {{ review_form.body|as_crispy_field }}
+                    <div class="row__display">
+                        <a href="javascript:history.go(-1)">
+                            <button type="button" class="btn btn-secondary">Annuler</button>
+                        </a>
+                        <button type="submit" class="btn btn-primary">Envoyer</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

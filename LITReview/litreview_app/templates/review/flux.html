@@ -1,0 +1,69 @@
+{% extends 'partials/base.html' %}
+
+{% block content %}
+<div class="container" style="text-align: center">
+  <h1 class="mt-4">Flux</h1>
+  <a href="{% url 'create_ticket' %}"><button class="btn btn-large btn-primary">Demander une critique</button></a>
+  <a href="{% url 'create_review' %}"><button class="btn btn-large btn-primary">Créer une critique</button></a>
+   <br><hr>
+
+  <div class="row">
+    {% for post in posts %}
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title">
+              {% if post.type == 'TICKET' %}
+                Ticket: {{ post.title }}
+              {% else %}
+              <div style="border: 2px solid black;">
+                        Vous avez publié un ticket
+                Review by {{ post.user.username }}
+              {% endif %}
+            </h5>
+          </div>
+          <div class="card-body">
+            {% if post.type == 'TICKET' %}
+              <p class="card-text">{{ post.description }}</p>
+              {% if post.image %}
+                <img src="{{ post.image.url }}" class="img-fluid" alt="Ticket Image">
+              {% endif %}
+            {% else %}
+              <p class="card-text">{{ post.body }}</p>
+              <p class="card-text">Rating: {{ post.rating }}</p>
+            {% endif %}
+          </div>
+          <div class="card-footer">
+            {% if post.type == 'TICKET' %}
+              {% if post.display == 'NORMAL' %}
+                <span class="badge bg-success">Normal</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Special</span>
+              {% endif %}
+            {% endif %}
+            <span class="text-muted">{{ post.time_created }}</span>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <h2 class="mt-4">Tickets Reviewed by You</h2>
+  {% for ticket in tickets_reviewed_by_user %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="card-title">Ticket: {{ ticket.title }}</h5>
+      </div>
+      <div class="card-body">
+        <p class="card-text">{{ ticket.description }}</p>
+        {% if ticket.image %}
+          <img src="{{ ticket.image.url }}" class="img-fluid" alt="Ticket Image">
+        {% endif %}
+      </div>
+      <div class="card-footer">
+        <span class="text-muted">{{ ticket.time_created }}</span>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

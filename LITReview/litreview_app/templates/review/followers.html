@@ -1,0 +1,53 @@
+{% extends 'partials/base.html' %}
+{% block content %}
+
+<h1 class="title">Abonnements</h1>
+<div class="center global__width">
+    <div class="subscriptions__item">
+        <p>Suivre d'autres utilisateurs</p>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ user_follows_form.followed_user|as_crispy_field }}
+            <button type="submit" class="button">Envoyer</button>
+        </form>
+        {% if error_message %}
+        <p class="error__message">{{ error_message }}</p>
+        {% elif validation_message %}
+        <p class="validation__message">{{ validation_message }}</p>
+        {% else %}
+        <p></p>
+        {% endif %}
+    </div>
+    <div class="subscriptions__item">
+        <p>Abonnements</p>
+        {% if not subscriptions %}
+        <p class="error__message">Vous n'êtes abonné à aucun utilisateur.</p>
+        {% else %}
+        <table class="subscriptions__table">
+            {% for subscription in subscriptions %}
+            <tr>
+                <td>{{ subscription.followed_user.username }}</td>
+                <td>
+                    <a href="{% url 'delete_subscription' subscription.followed_user.id %}">Désabonner</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    </div>
+    <div class="subscriptions__item">
+        <p>Abonnés</p>
+        {% if not subscribers %}
+        <p class="error__message">Vous n'avez aucun abonné pour le moment.</p>
+        {% else %}
+        <table class="subscriptions__table">
+            {% for subscriber in subscribers %}
+            <tr>
+                <td>{{ subscriber.username }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
