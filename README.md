@@ -16,7 +16,7 @@
 - [Architecture](#architecture)
 - [Configuration locale](#localconfig)
 - [Tests](#tests)
-- [Présentation](#presentation)
+
 
 <a id="obj"></a>
 ## Objectif
