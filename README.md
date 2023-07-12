@@ -2,7 +2,7 @@
 # Thème : Développez une application Web en utilisant Django
 
 <h3 align="center">
-    <img alt="Logo" title="#logo" width="250px" src="/images/LITrevu-banner.png">
+    <img alt="Logo" title="#Logo D'entreprise" width="250px" src="/images/LITrevu-banner.png">
     <br>
 </h3>
 
