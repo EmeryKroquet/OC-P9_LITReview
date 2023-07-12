@@ -2,7 +2,7 @@
 # Thème : Développez une application Web en utilisant Django
 
 <h3 align="center">
-    <img alt="Logo" title="#logo" width="250px" src="/assets/16004297044411_P7.png">
+    <img alt="Logo" title="#logo" width="250px" src="/images/LITrevu-banne.png">
     <br>
 </h3>
 
@@ -10,12 +10,12 @@
 # OpenClassrooms Projet P9
 
 - [Objectif](#obj)
-- [Compétences](#competences)
 - [Technologies](#techs)
 - [Requirements](#reqs)
 - [Architecture](#architecture)
 - [Configuration locale](#localconfig)
 - [Tests](#tests)
+- [Compétences](#competences)
 
 
 <a id="obj"></a>
@@ -24,10 +24,6 @@
 La jeune startup LITReview a pour objectif de commercialiser un produit permettant à une communauté d'utilisateurs de consulter ou de solliciter une critique de livres à la demande.
 L'objectif du projet est de développer cette application Web en utilisant Django.
 
-<a id="competences"></a>
-## Compétences acquises
-- Développer une application web en utilisant Django
-- Utiliser le rendu côté serveur dans Django
 
 <a id="techs"></a>
 ## Technologies Utilisées
@@ -145,5 +141,11 @@ Utilisez les identifiants de connexion suivant pour accéder et tester l'applica
 
 
 Voir la présentation pour en savoir plus sur les liens entre les utilisateurs de test.
+
+<a id="competences"></a>
+## Compétences acquises
+- Développer une application web en utilisant Django
+- Utiliser le rendu côté serveur dans Django
+- Mener une veille technologique
 
 

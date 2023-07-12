@@ -219,9 +219,9 @@ class FollowersView(View):
         user = request.user
         user_follows = UserFollows.objects.filter(user=user)
         already_followed = [pair.followed_user.id for pair in user_follows]
-        searched = request.POST['searched']
+        searched_value = request.GET.get('searched', None)
         try:
-            found_user = User.objects.get(username__iexact=searched)
+            found_user = User.objects.get(username__iexact=searched_value)
             user_follow_instance = UserFollows(user=user, followed_user=found_user)
             if user != found_user:
                 user_follow_instance.save()

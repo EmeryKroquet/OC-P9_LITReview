@@ -1,9 +1,9 @@
 {% extends 'partials/base.html' %}
 
 {% block content %}
-<div class="container" style="text-align: center">
+<div class="container">
   <h1 class="mt-4">Flux</h1>
-  <a href="{% url 'create_ticket' %}"><button class="btn btn-large btn-primary">Demander une critique</button></a>
+  <a href="{% url 'create_ticket' %}"><button class="btn btn-large btn-primary ">Demander une critique</button></a>
   <a href="{% url 'create_review' %}"><button class="btn btn-large btn-primary">Créer une critique</button></a>
    <br><hr>
 
@@ -16,9 +16,9 @@
               {% if post.type == 'TICKET' %}
                 Ticket: {{ post.title }}
               {% else %}
-              <div style="border: 2px solid black;">
-                        Vous avez publié un ticket
-                Review by {{ post.user.username }}
+              <div  class="card-title">
+                        Vous avez publié un ticket sur
+                une Critique par: {{ post.user.username }}
               {% endif %}
             </h5>
           </div>
@@ -48,7 +48,7 @@
     {% endfor %}
   </div>
 
-  <h2 class="mt-4">Tickets Reviewed by You</h2>
+  <h2 class="mt-4">Tickets examiné par vous</h2>
   {% for ticket in tickets_reviewed_by_user %}
     <div class="card mb-4">
       <div class="card-header">
