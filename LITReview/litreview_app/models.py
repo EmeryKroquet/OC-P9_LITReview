@@ -3,6 +3,10 @@ from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
+RATING_CHAR_ON = '★'
+RATING_CHAR_OFF = '☆'
+RATING_RANGE = range(5)
+
 class Ticket(models.Model):
     title = models.CharField(max_length=128, null=True, blank=True)
     description = models.TextField(max_length=2048, blank=True)
@@ -13,19 +17,20 @@ class Ticket(models.Model):
         blank=True
     )
     image = models.ImageField(null=True, blank=True, upload_to='images/')
-    time_created = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    time_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
 
 class Review(models.Model):
-    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
-    rating = models.PositiveSmallIntegerField(validators=[
-        MinValueValidator(0),
-        MaxValueValidator(5)])
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ticket = models.ForeignKey(to=Ticket, on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField(default=1, null=True, blank=True,
+        # validates that rating must be between 0 and 5
+        validators=[MinValueValidator(0), MaxValueValidator(5)])
     headline = models.CharField(max_length=128)
     body = models.TextField(max_length=8192, blank=True)
+    user = models.ForeignKey(
+        to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     time_created = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.headline

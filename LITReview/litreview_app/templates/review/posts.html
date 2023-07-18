@@ -1,95 +1,24 @@
 {% extends 'partials/base.html' %}
 {% load crispy_forms_tags %}
-
 {% block content %}
+<div class="row">
+  <div class="col-md-3"></div>
+  <div class="col-md-6">
+{% if posts %}
+    <h1>My Posts</h1>
 
-<div class="container" style="text-align: center">
-<h1 class="title">My posts</h1>
-<div class="center global__width">
-    {% for post in posts|dictsortreversed:"time_created" %}
-    {% if post.content_type == "TICKET" %}
+{% for post in posts %}
+  {% if post.type == 'TICKET' %}
+    {% include 'review/snippet_ticket.html' with ticket=post %}
+  {% elif post.type == 'REVIEW' %}
+    {% include 'review/snippet_review.html' with review=post ticket=post.ticket %}
+  {% endif %}
+{% endfor %}
 
-    {% if post.ticket_status == 'not_reviewed' %}
-    <div class="ticket__post not__reviewed">
-    {% else %}
-    <div class="ticket__post already__reviewed">
-    {% endif %}
-        <div class="ticket__post__content">
-            <div class="ticket__post__content__row">
-                {% if post.user == user %}
-                <p>Vous avez demandé un critique</p>
-                {% else %}
-                <p>{{ post.user.username }} a demandé un critique</p>
-                {% endif %}
-                <p>{{ post.time_created | date:'H:i, d F Y' }}</p>
-            </div>
-            <p>Titre : {{ post.title }}</p>
-            <div class="ticket__post__content__row">
-                {% if post.image %}
-                <img src="{{ post.image.url }}" class="ticket__image">
-                {% endif %}
-                <!-- empty element to put button to the right if no image-->
-                <p></p>
-                <div>
-                    <a href="{% url 'edit_ticket' post.id %}">
-                    <button class="btn btn-primary me-2">Modifier</button></a>
-                    <a href="{% url 'delete_ticket' post.id %}">
-                    <button class="btn btn-danger">Supprimer</button></a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {% elif post.content_type == "REVIEW" %}
-    <!--  REVIEW  -->
-    <div class="review__post">
-        <div class="review__post__content">
-            <div class="review__post__content__row">
-                {% if post.user == user %}
-                <p>Vous avez publié une critique</p>
-                {% else %}
-                <p>{{ post.user.username }} a publié un critique</p>
-                {% endif %}
-                <p>{{ post.time_created | date:'H:i, d F Y' }}</p>
-            </div>
-            <div class="review__rating">
-                <p>{{ post.headline }} -</p>
-                {% for _ in rating_range %}
-                {% if forloop.counter0 >= post.rating %}
-                <span class="rating__off">{{ rating_char_off }}</span>
-                {% else %}
-                <span class="rating__on">{{ rating_char_on }}</span>
-                {% endif %}
-                {% endfor %}
-            </div>
-            <p>Commentaire : {{ post.body }}</p>
-            <div class="ticket__in__review">
-                <div class="ticket__post__content">
-                    {% if post.ticket.user == user %}
-                    <p>Ticket - Vous</p>
-                    {% else %}
-                    <p>Ticket : {{ post.ticket.user }}</p>
-                    {% endif %}
-                    <p>Titre : {{ post.ticket.title }}</p>
-                    {% if post.ticket.image %}
-                    <img src="{{ post.ticket.image.url }}" class="ticket__image">
-                    {% endif %}
-                </div>
-            </div>
-            <div class="review__post__content__row">
-                <!-- empty element to put button to the right if no image-->
-                <p></p>
-                <div>
-                    <a href="{% url 'edit_review' post.id %}">
-                    <button class="btn btn-primary me-2">Modifier</button></a>
-                    <a href="{% url 'delete_review' post.id %}">
-                    <button class="btn btn-danger">Supprimer</button></a>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    {% endfor %}
+{% else %}
+<h1>Aucun posts!</h1>
+{% endif %}
+ </div>
+  <div class="col-md-3"></div>
 </div>
-</div>
-{% endblock %}
+{% endblock content %}

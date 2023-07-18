@@ -1,7 +1,5 @@
-from django.forms import ModelForm
 from .models import Ticket, Review, UserFollows
 from django import forms
-#from django.contrib.auth.models import User
 
 class TicketForm(forms.ModelForm):
     title = forms.CharField(min_length=2)
@@ -17,18 +15,27 @@ class TicketForm(forms.ModelForm):
 class ReviewForm(forms.ModelForm):
     headline = forms.CharField()
     body = forms.CharField(widget=forms.Textarea, required=False)
-    rating = forms.IntegerField(widget=forms.RadioSelect(choices=(
-        (1, "- 1"),
-        (2, "- 2"),
-        (3, "- 3"),
-        (4, "- 4"),
-        (5, "- 5"))))
+
     class Meta:
         model = Review
-        fields = ["headline", "rating", "body"]
+        fields = ['ticket', 'rating', 'headline', 'body', 'user']
+        widgets = {
+            'rating': forms.RadioSelect(attrs={'class': 'row__display'},
+                                        choices=[(0, ' 0'),
+                                                 (1, ' 1'),
+                                                 (2, ' 2'),
+                                                 (3, ' 3'),
+                                                 (4, ' 4'),
+                                                 (5, ' 5')]),
+        }
 
-class UserFollowsForm(ModelForm):
-    user = forms.CharField(label="", widget=forms.TextInput(attrs={"placeholder": "Nom d\'utilisateur"}))
+
+
+class UserFollowsForm(forms.ModelForm):
+    """Form to follow other user"""
     class Meta:
         model = UserFollows
-        fields = ['followed_user']
+        fields = ['user', 'followed_user']
+        widgets = {
+            'followed_user': forms.TextInput(attrs={'placeholder': 'Nom d\'utilisateur'})
+        }

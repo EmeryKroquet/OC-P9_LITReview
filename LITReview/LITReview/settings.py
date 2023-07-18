@@ -126,8 +126,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-LOGIN_REDIRECT_URL = 'tickets'
 STATIC_URL = '/static/'
+
+STATIC_ROOT = (BASE_DIR / 'assets')
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static'
+]
+
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = (BASE_DIR / 'media')
+
 INTERNAL_IPS = [
     # ...
     '127.0.0.1',
@@ -138,6 +148,8 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+LOGIN_REDIRECT_URL = "ticket/"
+
 LOGIN_REDIRECT_URL = "/"
 
 LOGOUT_REDIRECT_URL = "/login"
@@ -146,3 +158,5 @@ JAZZMIN_UI_TWEAKS = {
     "theme": "flatly",
     "theme": "darkly",
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

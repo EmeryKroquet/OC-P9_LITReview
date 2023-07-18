@@ -1,18 +1,14 @@
-from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
+from django.contrib.auth.models import User
+from django.core.validators import FileExtensionValidator
+
+# Create your models here.
 
 
-class User(AbstractUser):
+class ProfileModel(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    image = models.ImageField(default='default.jpg', upload_to='profile', validators=[
+                              FileExtensionValidator(['png', 'jpg'])])
 
-    profile_photo = models.ImageField(verbose_name='photo de profil')
-    groups = models.ManyToManyField(
-        Group,
-        related_name='followers',  # Add a unique related_name
-        verbose_name='Suit'
-    )
-
-    user_permissions = models.ManyToManyField(
-    Permission,
-    related_name='followers',  # Add a unique related_name
-    verbose_name = 'suivi par',
-    )
+    def __str__(self):
+        return self.user.username

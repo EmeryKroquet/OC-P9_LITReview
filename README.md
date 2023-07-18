@@ -29,7 +29,7 @@ L'objectif du projet est de développer cette application Web en utilisant Djang
 ## Technologies Utilisées
 - [Python3](https://www.python.org/)
 - [Django](https://www.djangoproject.com/)
-- [Django] ()https://www.bootstrap.com/)
+- [Bootstrap] (https://www.bootstrap.com/)
 
 <a id="reqs"></a>
 ## Requirements
@@ -97,7 +97,7 @@ pip install -r requirements.txt
 
 ### 4. Initialisation de la base de données
 
-Accédez au dossier de travail.
+Accédez au dossier du projet.
 ```bash
 cd litreview_project
 ```
@@ -116,7 +116,7 @@ python manage.py migrate
 
 ### 1. Démarrage du serveur local
 
-Accédez au dossier de travail.
+Accédez au dossier du projet.
 ```bash
 cd LITReview
 ```
@@ -128,19 +128,19 @@ python manage.py runserver
 
 ### 2. Navigation
 
-Accédez au site sur votre navigateur depuis l'url http://127.0.0.1:8000/
+Accédez au site sur le navigateur de votre choix depuis l 'url http://127.0.0.1:8000/
 
 <a id="tests"></a>
 ### Tests
 
 Utilisez les identifiants de connexion suivant pour accéder et tester l'application.
 
-| Utilisateur           | Identifiant | Mot de passe |
-|-----------------------|-------------|--------------|
-| Utilisateur Principal | `admin`     | `admin`      |
+| Utilisateur           | Identifiant | Mot de passe    |
+|-----------------------|-------------|-----------------|
+| Utilisateur Principal | `admin`     | `admin`         |
+| Utilisateur - 1       | `jasmin`    | `123456789-jas` |
+| Utilisateur - 2       | `chiv`      | `123456789-ch`  |
 
-
-Voir la présentation pour en savoir plus sur les liens entre les utilisateurs de test.
 
 <a id="competences"></a>
 ## Compétences acquises

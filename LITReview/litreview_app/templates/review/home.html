@@ -1,25 +1,49 @@
 {% extends 'partials/base.html' %}
+{% block title %}Home{% endblock %}
 {% block content %}
-
-    <div class="container">
-      <div class="row align-items-center">
-        <div class="col-sm text-center mb-5">
-          <form action="{% url 'signin' %}">
-            <h3 class="mb-4">Inscrivez-vous maintenant</h3>
-            <button type="submit" class="btn btn-primary">S'inscrire</button>
-          </form>
-        </div>
-        <div class="col-sm mb-7">
-            <form action="{% url 'login' %}">
-            <h3 class="mb-4">connectez-vous!</h3>
-            <button type="submit" class="btn btn-primary">Se connecter</button>
-            {% block login %}
-
-
-
-            {% endblock %}
+<div class="cover">
+    <div class="container ">
+        <div class="row mt-5 pt-3">
+            <div class="col-md-5 offset-md-6">
+                <div class="card my-3 shadow">
+                    <div class="card-body">
+                        <hr>
+                        <h4>Inscrivez-vous maintenant</h4>
+                        <hr>
+                        <a href="{% url 'signin' %}">
+                        <button type="button" class="btn btn-primary">S'Inscrire</button>
+                        </a>
+            </div>
+          </div>
         </div>
       </div>
-  </div>
-
+      <div class="container">
+        <div class="row mt-5 pt-3">
+            <div class="col-md-5 offset-md-6">
+                <div class="card my-3 shadow">
+                    <div class="card-body">
+                        <h4>Connectez-vous à votre Compte</h4>
+                        <hr>
+                        <form method="POST">
+                            <a href="{% url 'signin' %}"></a>
+                            {% csrf_token %}
+                            <label for="exampleInputEmail1" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                            <label for="exampleInputPassword1" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="exampleInputPassword1">
+                            <p></p>
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary">Connecter</button>
+                            </div>
+                        </form>
+                        <hr>
+                        <div class="text-center my-3">
+                            <a href="{% url 'password_reset' %}">Mot de passe Oublier?</a>
+                        </div>
+                        <hr>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

@@ -1,26 +1,21 @@
 from itertools import chain
 from urllib.parse import urlencode
-
-from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.db.models import CharField, Value
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
 from django.utils.decorators import method_decorator
-
-from .models import Ticket, Review, UserFollows
+from .models import Ticket, Review, UserFollows, RATING_CHAR_ON, RATING_CHAR_OFF, RATING_RANGE
 from .forms import ReviewForm, TicketForm, UserFollowsForm
 from django.views import View
 
 
-class HomeView(LoginRequiredMixin, View):
-    template_name = "'users:login'"
+class HomeView(View):
     def get(self, request):
-        return redirect("flux")
+        return render(request, 'review/home.html')
 class CreateTicketView(LoginRequiredMixin, View):
     def get(self, request):
         form = TicketForm()
@@ -36,14 +31,12 @@ class CreateTicketView(LoginRequiredMixin, View):
         return redirect("flux")
 
 class DeleteTicketView(LoginRequiredMixin, View):
-    template_name = "users:login"
     def get(self, request, ticket_id):
         ticket = get_object_or_404(Ticket, pk=ticket_id)
         ticket()
         return redirect('posts')
 
 class EditTicketView(LoginRequiredMixin, View):
-    template_name = "users:login"
     """View to edit a ticket"""
     def get(self, request, ticket_id):
         ticket = Ticket.objects.get(id=ticket_id)
@@ -138,7 +131,6 @@ class DeleteReviewView(View):
 
 #@method_decorator(login_required, name='dispatch')
 class TicketAndReviewView(LoginRequiredMixin, View):
-    template_name = 'users:login.html'
     def get(self, request, ticket_id):
         review_form = ReviewForm()
         ticket = Ticket.objects.get(id=ticket_id)
@@ -168,98 +160,121 @@ class TicketAndReviewView(LoginRequiredMixin, View):
         return redirect('flux')
 
 
-RATING_RANGE = range(1, 6)
-RATING_CHAR_ON = "★"
-RATING_CHAR_OFF = "☆"
 class PostsView(LoginRequiredMixin, View):
-    template_name = 'users:login.html'
+    template_name = 'review/posts.html'
+
     def get(self, request):
-        current_user = request.user
-        # Fetch own tickets and annotate content type
-        my_tickets = Ticket.objects.filter(user=current_user).annotate(content_type=Value('TICKET', CharField()))
-        # Fetch own tickets not reviewed
-        my_tickets_not_reviewed = my_tickets.exclude(
-            id__in=Review.objects.filter(ticket__in=my_tickets).values_list('ticket__id')).annotate(
-            ticket_status=Value('not_reviewed', CharField()))
-        # Fetch own tickets already reviewed
-        my_tickets_reviewed = my_tickets.filter(
-            id__in=Review.objects.filter(ticket__in=my_tickets).values_list('ticket__id')).annotate(
+        user = request.user
+        ticket = Ticket.objects.filter(user=user)
+        ticket = ticket.annotate(content_type=Value('TICKET', CharField()))
+
+        ticket_not_reviewed = ticket.exclude(id__in=[review.ticket.id for review in Review.objects.filter(
+            ticket__in=ticket)]).annotate(ticket_status=Value('not_reviewed', CharField()))
+        ticket_reviewed = ticket.filter(
+            id__in=[review.ticket.id for review in Review.objects.filter(ticket__in=ticket)]).annotate(
             ticket_status=Value('already_reviewed', CharField()))
-        # Fetch own reviews and annotate content type
-        my_reviews = Review.objects.filter(user=current_user).annotate(content_type=Value('REVIEW', CharField()))
-        # Combine tickets not reviewed, tickets reviewed, and reviews
-        posts = chain(my_tickets_not_reviewed, my_tickets_reviewed, my_reviews)
-        return render(request, 'review/posts.html', context={'posts': posts,
-                                                            'rating_range': RATING_RANGE,
-                                                            'rating_char_on': RATING_CHAR_ON,
-                                                            'rating_char_off': RATING_CHAR_OFF})
-@method_decorator(login_required, name='dispatch')
-class FollowersView(View):
-    template_name = 'review/followers.html'
 
+        review = Review.objects.filter(user=user)
+        review = review.annotate(content_type=Value('REVIEW', CharField()))
+
+        posts = chain(ticket_not_reviewed, ticket_reviewed, review)
+        context = {'posts': posts,
+                   'rating_range': RATING_RANGE,
+                   'rating_char_on': RATING_CHAR_ON,
+                   'rating_char_off': RATING_CHAR_OFF}
+        return render(request, self.template_name, context)
+
+_MESSAGES = {
+    'unknown_user': "Utilisateur inconnu !",
+    'do_not_follow_yourself': "Veuillez renseigner un nom d'utilisateur autre que le votre.",
+    'subscription_success': "Vous suivez désormais l'utilisateur {username} !",
+    'already_following': "Vous suivez déjà l'utilisateur {username} !",
+    'stopped_subscription': "Vous ne suivez désormais plus l'utilisateur {username}"
+
+}
+class FollowersView(LoginRequiredMixin, View):
     def get(self, request):
-        nav_bar = 'followers'
-        user = request.user
-        user_follows = UserFollows.objects.filter(followed_user=user.id)
-        following = UserFollows.objects.filter(user=user.id)
-        user_follow = UserFollows()
-        found_user = ""
+        follows_form = UserFollowsForm()
+        user = User.objects.get(username=request.user.username)
+        user_subscriptions = list(UserFollows.objects.filter(user=user))
+        subscribers = [user_follow.user for user_follow in UserFollows.objects.filter(followed_user=user)]
 
-        form = UserFollowsForm()
-        user_follows = UserFollows.objects.filter(user=user)
-        already_followed = [pair.followed_user.id for pair in user_follows]
-        options = User.objects.all().exclude(
-            id__in=already_followed).exclude(id=user.id)
-
-        result_list = list(chain(options, already_followed))
-        form.fields['followed_user'].queryset = options
-        return render(request, self.template_name, locals())
+        error_message = request.GET.get('error_message') if request.GET.get('error_message') != 'None' else None
+        validated_message = request.GET.get('validated_message') if request.GET.get(
+            'validated_message') != 'None' else None
+        followed_user = request.GET.get('followed_user') if request.GET.get('followed_user') != 'None' else None
+        if error_message is not None:
+            error_message = _MESSAGES[error_message].format(username=followed_user)
+        else:
+            error_message = None
+        if validated_message is not None:
+            validated_message[validated_message].format(username=followed_user)
+        else:
+            validated_message = None
+            context = {'follows_form': follows_form,
+                       'subscriptions': user_subscriptions,
+                       'subscribers': subscribers,
+                       'error_message': error_message,
+                       'validated_message': validated_message}
+            return render(request, 'review/followers.html', context)
 
     def post(self, request):
+        error_message = None
+        validated_message = None
         user = request.user
-        user_follows = UserFollows.objects.filter(user=user)
-        already_followed = [pair.followed_user.id for pair in user_follows]
-        searched_value = request.GET.get('searched', None)
-        try:
-            found_user = User.objects.get(username__iexact=searched_value)
-            user_follow_instance = UserFollows(user=user, followed_user=found_user)
-            if user != found_user:
-                user_follow_instance.save()
+        user_followed_username = request.POST.get('followed_user', False)
+        if not User.objects.filter(username=user_followed_username).exists():
+            error_message = 'unknown_user'
+        elif user_followed_username == user.username:
+            error_message = 'do_not_follow_yourself'
+        else:
+            followed_user_id = User.objects.get(username=user_followed_username).id
+            follows_form = UserFollowsForm({'user': user,
+                                           'followed_user': followed_user_id})
+            if follows_form.is_valid():
+                follows_form.save()
+                validated_message = 'subscription_success'
             else:
-               error_message = "vous ne pouvez pas vous suivre!"
-        except User.DoesNotExist:
-            found_user = None
-        except IntegrityError:
-            found_user = None
-            error_message = "Vous êtes déjà abonner à cet utilisateur"
-        return render(request, self.template_name, locals())
+                error_message = 'already_following'
+        query = {'error_message': error_message,
+                 'validated_message': validated_message,
+                 'followed_user': user_followed_username}
+        query_string = urlencode(query)
+        return redirect(f'/followers/?{query_string}')
 
-@method_decorator(login_required, name='dispatch')
-class DeleteUserFollowView(View):
-    def get(self, request, user_follow_id):
-        user_follows = get_object_or_404(UserFollows, pk=user_follow_id)
-        user_follows.delete()
-        return redirect('followers')
+class DeleteUserFollowView( LoginRequiredMixin, View):
+    def get(self, request, followed_user_id):
+        user = request.user
+        followed_user = User.objects.get(id=followed_user_id)
+        subscription_to_delete = UserFollows.objects.get(user=user, followed_user=followed_user)
+        subscription_to_delete.delete()
+        validated_message = 'stopped_subscription'
+        query = {'validated_message': validated_message,
+                     'followed_user': followed_user.username}
+        query_string = urlencode(query)
+        return redirect(f'/followers/?{query_string}')
 
 
     def post(self, request):
-        current_user = request.user
+        user = request.user
         follower_username = request.POST.get('followed_user')
 
         if not User.objects.filter(username=follower_username).exists():
             error_message = 'unknown_user'
-        elif follower_username == current_user.username:
+        elif follower_username == user.username:
             error_message = 'do_not_follow_yourself'
         else:
             follower_user_id = User.objects.get(username=follower_username).id
-            follows_form = UserFollowsForm({'user': current_user, 'followed_user': follower_user_id})
+            follows_form = UserFollowsForm({'user': user, 'followed_user': follower_user_id})
             if follows_form.is_valid():
                 follows_form.save()
-                validation_message = 'subscription_success'
+                validated_message = 'subscription_success'
             else:
                 error_message = 'already_following'
 
-        query = {'error_message': error_message, 'validation_message': validation_message,
+        query = {
+            'error_message': error_message,
+            'validated_message': validated_message,
                  'followed_user': follower_username
                  }
         query_string = urlencode(query)
@@ -268,16 +283,14 @@ class DeleteUserFollowView(View):
 
 
 class DeleteFollowers(LoginRequiredMixin, View):
-    template_name = 'users:login.html'
-    """Link to delete subscription"""
     def get(self, request, followed_user_id):
-        actual_user = request.user
+        user = request.user
         followed_user = get_object_or_404(User, id=followed_user_id)
-        subscription_to_delete = get_object_or_404(UserFollows, user=actual_user, followed_user=followed_user)
+        subscription_to_delete = get_object_or_404(UserFollows, user=user, followed_user=followed_user)
         subscription_to_delete.delete()
-        validation_message = 'stopped_subscription'
+        validated_message = 'stopped_subscription'
 
-        query = {'validation_message': validation_message, 'followed_user': followed_user.username}
+        query = {'validation_message': validated_message, 'followed_user': followed_user.username}
         query_string = urlencode(query)
 
         return redirect(f'followers?{query_string}')
