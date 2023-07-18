@@ -10,7 +10,7 @@
 }
 */
 .cover{
-    background-image: url('/media/background1.jpg');
+    background-image: url('/media/background-1.jpg');
     background-position: center center;
      background-attachment: fixed;
      background-repeat: no-repeat;
@@ -19,6 +19,6 @@
 
 @media only screen and (max-width: 767px) {
 .cover {
-background-image: url('/media/background1.jpg');
+background-image: url('/media/background-1.jpg');
 }
 }

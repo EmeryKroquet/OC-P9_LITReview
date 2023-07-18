@@ -208,14 +208,16 @@ class FollowersView(LoginRequiredMixin, View):
         else:
             error_message = None
         if validated_message is not None:
-            validated_message[validated_message].format(username=followed_user)
+            validated_message = _MESSAGES[validated_message].format(username=followed_user)
         else:
             validated_message = None
+
             context = {'follows_form': follows_form,
                        'subscriptions': user_subscriptions,
                        'subscribers': subscribers,
                        'error_message': error_message,
                        'validated_message': validated_message}
+
             return render(request, 'review/followers.html', context)
 
     def post(self, request):
