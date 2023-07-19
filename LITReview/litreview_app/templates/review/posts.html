@@ -1,24 +1,81 @@
 {% extends 'partials/base.html' %}
 {% load crispy_forms_tags %}
 {% block content %}
-<div class="row">
-  <div class="col-md-3"></div>
-  <div class="col-md-6">
-{% if posts %}
-    <h1>My Posts</h1>
+<h1 class="title text-center">Vos posts</h1>
+<div class="container">
+    {% for post in posts|dictsortreversed:'time_created' %}
+    {% if post.content_type == 'TICKET' %}
 
-{% for post in posts %}
-  {% if post.type == 'TICKET' %}
-    {% include 'review/snippet_ticket.html' with ticket=post %}
-  {% elif post.type == 'REVIEW' %}
-    {% include 'review/snippet_review.html' with review=post ticket=post.ticket %}
-  {% endif %}
-{% endfor %}
-
-{% else %}
-<h1>Aucun posts!</h1>
-{% endif %}
- </div>
-  <div class="col-md-3"></div>
+    <!-- TICKET DISPLAY -->
+    {% if post.ticket_status == 'not_reviewed' %}
+    <div class="card bg-light mb-3 ticket__post not__reviewed">
+        {% else %}
+        <div class="card bg-light mb-3 ticket__post already__reviewed">
+            {% endif %}
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    {% if post.user == user.username %}
+                    <p>Vous avez demandé une critique</p>
+                    {% else %}
+                    <p>{{ post.user.username }} a demandé une critique</p>
+                    {% endif %}
+                    <p>{{ post.time_created|date:'H:i, d F Y' }}</p>
+                </div>
+                <p class="card-text">Titre : {{ post.title }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    {% if post.image %}
+                    <img src="{{ post.image.url }}" class="ticket__image" alt="Image du ticket">
+                    {% endif %}
+                    <div>
+                        <a href="{% url 'edit_ticket' post.id %}" class="btn btn-primary me-2">Modifier</a>
+                        <a href="{% url 'delete_ticket' post.id %}" class="btn btn-danger">Supprimer</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% elif post.content_type == 'REVIEW' %}
+    <!-- REVIEW DISPLAY -->
+    <div class="card bg-light mb-3 review__post">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                {% if post.user == user.username %}
+                <p>Vous avez publié une critique</p>
+                {% else %}
+                <p>{{ post.user.username }} a publié un critique</p>
+                {% endif %}
+                <p>{{ post.time_created|date:'H:i, d F Y' }}</p>
+            </div>
+            <div class="review__rating">
+                <p>{{ post.headline }} -</p>
+                {% for _ in rating_range %}
+                {% if forloop.counter0 >= post.rating %}
+                <p class="rating__off">{{ rating_char_off }}</p>
+                {% else %}
+                <p class="rating__on">{{ rating_char_on }}</p>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <p class="card-text">Commentaire : {{ post.body }}</p>
+            <div class="card bg-light mb-3 ticket__in__review">
+                <div class="card-body">
+                    {% if post.ticket.user == user %}
+                    <p>Ticket - Vous</p>
+                    {% else %}
+                    <p>Ticket : {{ post.ticket.user }}</p>
+                    {% endif %}
+                    <p>Titre : {{ post.ticket.title }}</p>
+                    {% if post.ticket.image %}
+                    <img src="{{ post.ticket.image.url }}" class="ticket__image" alt="Image du ticket">
+                    {% endif %}
+                </div>
+            </div>
+            <div class="d-flex justify-content-end">
+                <a href="{% url 'edit_review' post.id %}" class="btn btn-primary me-2">Modifier</a>
+                <a href="{% url 'delete_review' post.id %}" class="btn btn-danger">Supprimer</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
 </div>
-{% endblock content %}
+{% endblock %}

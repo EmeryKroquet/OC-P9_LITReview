@@ -3,11 +3,9 @@ from urllib.parse import urlencode
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.db import IntegrityError
 from django.db.models import CharField, Value
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.utils.decorators import method_decorator
 from .models import Ticket, Review, UserFollows, RATING_CHAR_ON, RATING_CHAR_OFF, RATING_RANGE
 from .forms import ReviewForm, TicketForm, UserFollowsForm
 from django.views import View
@@ -30,10 +28,11 @@ class CreateTicketView(LoginRequiredMixin, View):
             return redirect("posts")
         return redirect("flux")
 
+
 class DeleteTicketView(LoginRequiredMixin, View):
     def get(self, request, ticket_id):
-        ticket = get_object_or_404(Ticket, pk=ticket_id)
-        ticket()
+        ticket = Ticket.objects.get(id=ticket_id)
+        ticket.delete()
         return redirect('posts')
 
 class EditTicketView(LoginRequiredMixin, View):
@@ -41,30 +40,19 @@ class EditTicketView(LoginRequiredMixin, View):
     def get(self, request, ticket_id):
         ticket = Ticket.objects.get(id=ticket_id)
         form = TicketForm(instance=ticket)
-        context = {'form': form,
-                   'edit': True}
-        return render(request, 'ticket/create_ticket.html', context)
-
+        context = {'form': form, 'edit': True}
+        return render(request, 'review/create_ticket.html', context)
 
     def post(self, request, ticket_id):
         ticket = Ticket.objects.get(id=ticket_id)
-        actual_user = request.user
-        title = request.POST.get('title', False)
-        description = request.POST.get('description', False)
-        image = request.POST.get('image', False)
-        form = TicketForm({'title': title,
-                           'description': description,
-                           'image': image,
-                           'user': actual_user,
-                           'id': id},
-                          request.FILES, instance=ticket)
+        form = TicketForm(request.POST, request.FILES, instance=ticket)
         if not form.is_valid():
             return HttpResponse(f"<p>{form.errors}</p>")
         form.save()
         return redirect('/posts/')
 
-@method_decorator(login_required, name='dispatch')
-class CreateReviewView(View):
+
+class CreateReviewView(LoginRequiredMixin, View):
     def get(self, request):
         review_form = ReviewForm()
         ticket_form = TicketForm()
@@ -74,7 +62,7 @@ class CreateReviewView(View):
         return render(request, 'review/create_review.html', context)
 
     def post(self, request):
-        actual_user = request.user
+        user = request.user
 
         # Create ticket
         ticket_form = TicketForm(request.POST, request.FILES)
@@ -82,55 +70,19 @@ class CreateReviewView(View):
             return HttpResponse(f"<p>ticket_form errors: {ticket_form.errors}</p>")
 
         ticket = ticket_form.save(commit=False)
-        ticket.user = actual_user
+        ticket.user = user
         ticket.save()
         # Create review
         review_form = ReviewForm(request.POST)
         if not review_form.is_valid():
             return HttpResponse(f"<p>review_form errors: {review_form.errors}</p>")
         review = review_form.save(commit=False)
-        review.user = actual_user
+        review.user = user
         review.ticket = ticket
         review.save()
         return redirect('flux')
 
-
-@method_decorator(login_required, name='dispatch')
-class EditReviewView(View):
-    def get(self, request, review_id):
-        review = Review.objects.get(id=review_id)
-        review_form = ReviewForm(instance=review)
-        ticket = review.ticket
-        context = {
-            'review_form': review_form,
-            'ticket': ticket,
-            'edit': True
-        }
-        return render(request, 'review/create_review_and_ticket.html', context)
-
-    def post(self, request, review_id):
-        review = Review.objects.get(id=review_id)
-        ticket = Ticket.objects.get(id=review.ticket.id)
-        current_user = request.user
-        review_form = ReviewForm()
-        context = {ticket: 'ticket',
-                   current_user: 'current_user'}
-        if review_form.is_valid():
-            review_form.save()
-            return redirect('posts', context)
-        else:
-            return HttpResponse("<p>Form errors</p>")
-
-
-@method_decorator(login_required, name='dispatch')
-class DeleteReviewView(View):
-    def get(self, request, review_id):
-        review = Review.objects.get(id=review_id)
-        review.delete()
-        return redirect('posts')
-
-#@method_decorator(login_required, name='dispatch')
-class TicketAndReviewView(LoginRequiredMixin, View):
+class CreateTicketAndReviewView(LoginRequiredMixin, View):
     def get(self, request, ticket_id):
         review_form = ReviewForm()
         ticket = Ticket.objects.get(id=ticket_id)
@@ -159,6 +111,43 @@ class TicketAndReviewView(LoginRequiredMixin, View):
         review_form.save()
         return redirect('flux')
 
+class EditReviewView(LoginRequiredMixin, View):
+    def get(self, request, review_id):
+        review = Review.objects.get(id=review_id)
+        review_form = ReviewForm(instance=review)
+        ticket = review.ticket
+        context = {
+            'review_form': review_form,
+            'ticket': ticket,
+            'edit': True
+        }
+        return render(request, 'review/create_review_and_ticket.html', context)
+
+    def post(self, request, review_id):
+        review = Review.objects.get(id=review_id)
+        ticket = Ticket.objects.get(id=review.ticket.id)
+        user = request.user
+        headline = request.POST.get('headline', False)
+        body = request.POST.get('body', False)
+        rating = request.POST.get('rating', False)
+        review_form = ReviewForm({'headline': headline,
+                                  'body': body,
+                                  'rating': rating,
+                                  'user': user,
+                                  'ticket': ticket}, instance=review)
+        if review_form.is_valid():
+            review_form.save()
+            return redirect('posts')
+        else:
+            return HttpResponse("<p>Form errors</p>")
+
+
+
+class DeleteReviewView(LoginRequiredMixin, View):
+    def get(self, request, review_id):
+        review = Review.objects.get(id=review_id)
+        review.delete()
+        return redirect('posts')
 
 class PostsView(LoginRequiredMixin, View):
     template_name = 'review/posts.html'
@@ -254,7 +243,7 @@ class DeleteUserFollowView( LoginRequiredMixin, View):
         query = {'validated_message': validated_message,
                      'followed_user': followed_user.username}
         query_string = urlencode(query)
-        return redirect(f'/followers/?{query_string}')
+        return redirect(f'followers?{query_string}')
 
 
     def post(self, request):
@@ -282,21 +271,6 @@ class DeleteUserFollowView( LoginRequiredMixin, View):
         query_string = urlencode(query)
 
         return redirect(f'followers?{query_string}')
-
-
-class DeleteFollowers(LoginRequiredMixin, View):
-    def get(self, request, followed_user_id):
-        user = request.user
-        followed_user = get_object_or_404(User, id=followed_user_id)
-        subscription_to_delete = get_object_or_404(UserFollows, user=user, followed_user=followed_user)
-        subscription_to_delete.delete()
-        validated_message = 'stopped_subscription'
-
-        query = {'validation_message': validated_message, 'followed_user': followed_user.username}
-        query_string = urlencode(query)
-
-        return redirect(f'followers?{query_string}')
-
 
 
 class FluxView(LoginRequiredMixin, View):

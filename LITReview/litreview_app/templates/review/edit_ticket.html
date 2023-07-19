@@ -1,42 +1,43 @@
 {% extends 'partials/base.html' %}
-{% load crispy_forms_tags%}
+{% load crispy_forms_tags %}
+
 {% block content %}
 <div class="container">
     <div class="row mt-5 pt-3">
         <div class="col-md-8 offset-md-2">
-            <div class="card my-3 shadow">
+            <div class="card my-3 ">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
-                            <img class="img-thumbnail" src="{{ post.user.profilemodel.image.url }}" alt="profile-img">
+                            <!--<img class="img-thumbnail" src="{{ post.user.profilemodel.image.url }}" alt="profile-img">-->
                         </div>
                         <div class="col-md-8">
-                            <h1>Ticket Detail</h1>
-                             <h2>{{ ticket.title }}</h2>
-                                 <p>{{ ticket.description }}</p>
-                                <p>Created by: {{ ticket.user.username }}</p>
-                                    <!-- Display reviews -->
-                                    <h3>Reviews:</h3>
+                            <h1>Détails de Ticket</h1>
+                            <h2>{{ post.title }}</h2>
+                            <p>{{ post.description }}</p>
+                            <p>Créé par : {{ post.user.username }}</p>
+                            <!-- Display reviews -->
+                            <h3>Commentaires :</h3>
                             {% for review in reviews %}
                                 <h4>{{ review.headline }}</h4>
-                                 <p>{{ review.body }}</p>
-                                 <p>Rating: {{ review.rating }}</p>
-                                 <p>Created by: {{ review.user.username }}</p>
-                                {% empty %}
-                                <p>No reviews available.</p>
-                        {% endfor %}
-                                <!-- Review form -->
-                                <h3>Add a Review:</h3>
+                                <p>{{ review.body }}</p>
+                                <p>Évaluation : {{ review.rating }}</p>
+                                <p>Créé par : {{ review.user.username }}</p>
+                            {% empty %}
+                                <p>Aucun commentaire disponible.</p>
+                            {% endfor %}
+                            <!-- Review form -->
+                            <h3>Ajouter un commentaire :</h3>
                             <form method="post">
-                                 {% csrf_token %}
-                                {{ review_form | crispy }}
-                                 <button class="btn btn-primary" type="submit">Submit Review</button>
-                        </form>
+                                {% csrf_token %}
+                                {{ form|crispy }}
+                                <button class="btn btn-primary" type="submit">Soumettre</button>
+                            </form>
+                        </div>
                     </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
     </div>
 </div>
 {% endblock %}

@@ -4,18 +4,17 @@
 <div class="row">
   <div class="col-md-1"></div>
   <div class="col-md-10">
-
     <div class="container p-4 my-4 border rounded">
-
       <div class="card">
 
         {% if review_instance.ticket.image %}
-          <img class="card-img-top" width="100%" src="{{ review_instance.ticket.image.url }}" role="img" preserveAspectRatio="xMidYMid slice" focusable="false"></img>
+          <img class="card-img-top" width="100%" src="{{ review_instance.ticket.image.url }}"
+               role="img" preserveAspectRatio="xMidYMid slice" focusable="false"></img>
         {% endif %}
 
         <div class="card-body">
           <h5 class="card-title">{{ review_instance.ticket.title }}</h5>
-          <h6 class="card-subtitle mb-2 text-muted">asked by: {{ review_instance.ticket.user }}</h6>
+          <h6 class="card-subtitle mb-2 text-muted">demander par: {{ review_instance.ticket.user }}</h6>
           <h6 class="card-subtitle mb-2 text-muted">date: {{ review_instance.ticket.time_created }}</h6>
           <p class="card-text">{{ review_instance.ticket.description }}</p>
         </div>
@@ -54,7 +53,7 @@
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="submit" class="btn btn-primary">Soumettre</button>
         </form>
       </div>
     </div>
@@ -63,3 +62,54 @@
 </div>
 
 {% endblock content %}
+
+{% extends "partials/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">Créer une critique</h1>
+    <div class="center global__width global__margin__bottom">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title">Livre / Article</h2>
+                    <div class="mb-3">
+                        {{ ticket_form.title|as_crispy_field }}
+                    </div>
+                    <div class="mb-3">
+                        {{ ticket_form.description|as_crispy_field }}
+                    </div>
+                    <div class="mb-3">
+                        {{ ticket_form.image|as_crispy_field }}
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Critique</h2>
+                    <div class="mb-3">
+                        {{ review_form.headline|as_crispy_field }}
+                    </div>
+                    <div class="mb-3">
+                        {{ review_form.rating|as_crispy_field }}
+                    </div>
+                    <div class="mb-3">
+                        {{ review_form.body|as_crispy_field }}
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <button type="button" class="btn btn-secondary">Annuler</button>
+                        </div>
+                        <div class="col">
+                            <button type="submit" class="btn btn-primary">Envoyer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
