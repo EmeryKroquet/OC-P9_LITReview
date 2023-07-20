@@ -13,14 +13,13 @@ class TicketForm(forms.ModelForm):
         fields = ['title', 'description', 'image', 'user']
 
 class ReviewForm(forms.ModelForm):
-    headline = forms.CharField()
-    body = forms.CharField(widget=forms.Textarea, required=False)
+    """Form for creating reviews"""
 
     class Meta:
         model = Review
         fields = ['ticket', 'rating', 'headline', 'body', 'user']
         widgets = {
-            'rating': forms.RadioSelect(attrs={'class': 'row__display'},
+            'rating': forms.RadioSelect(attrs={'class': 'form-check-inline'},
                                         choices=[(0, ' 0'),
                                                  (1, ' 1'),
                                                  (2, ' 2'),

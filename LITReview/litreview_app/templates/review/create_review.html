@@ -3,48 +3,34 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="title">Créer une critique</h1>
-    <div class="center global__width global__margin__bottom">
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h2 class="card-title">Livre / Article</h2>
-                    <div class="mb-3">
-                        {{ ticket_form.title|as_crispy_field }}
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="container p-4 my-4 border rounded">
+            <h2 class="card-title text-center">Critique</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="{{ review_form.headline.id_for_label }}">Titre</label>
+                    {{ review_form.headline|as_crispy_field }}
+                </div>
+                <div class="mb-3 form-check-inline">
+                    <label>Note:</label>
+                     {{ review_form.rating|safe }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ review_form.body.id_for_label }}">Commentaire</label>
+                    {{ review_form.body|as_crispy_field }}
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <a href="{% url 'flux' %}" class="btn btn-secondary">Annuler</a>
                     </div>
-                    <div class="mb-3">
-                        {{ ticket_form.description|as_crispy_field }}
-                    </div>
-                    <div class="mb-3">
-                        {{ ticket_form.image|as_crispy_field }}
+                    <div class="col">
+                        <button type="submit" class="btn btn-primary">Envoyer</button>
                     </div>
                 </div>
-            </div>
-            <div class="card">
-                <div class="card-body">
-                    <h2 class="card-title">Critique</h2>
-                    <div class="mb-3">
-                        {{ review_form.headline|as_crispy_field }}
-                    </div>
-                    <div class="mb-3">
-                        {{ review_form.rating|as_crispy_field }}
-                    </div>
-                    <div class="mb-3">
-                        {{ review_form.body|as_crispy_field }}
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <button type="button" class="btn btn-secondary">Annuler</button>
-                        </div>
-                        <div class="col">
-                            <button type="submit" class="btn btn-primary">Envoyer</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
+            </form>
+        </dv>
     </div>
 </div>
-
 {% endblock %}

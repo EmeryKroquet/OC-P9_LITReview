@@ -14,7 +14,7 @@
             {% endif %}
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    {% if post.user == user.username %}
+                    {% if post.user == user %}
                     <p>Vous avez demandé une critique</p>
                     {% else %}
                     <p>{{ post.user.username }} a demandé une critique</p>
@@ -26,19 +26,25 @@
                     {% if post.image %}
                     <img src="{{ post.image.url }}" class="ticket__image" alt="Image du ticket">
                     {% endif %}
+                    <p></p>
                     <div>
                         <a href="{% url 'edit_ticket' post.id %}" class="btn btn-primary me-2">Modifier</a>
                         <a href="{% url 'delete_ticket' post.id %}" class="btn btn-danger">Supprimer</a>
                     </div>
                 </div>
             </div>
+            {% if post.ticket_status == 'not_reviewed' %}
         </div>
+        </div>
+    {% else %}
+</div>
+{% endif %}
     {% elif post.content_type == 'REVIEW' %}
     <!-- REVIEW DISPLAY -->
     <div class="card bg-light mb-3 review__post">
         <div class="card-body">
             <div class="d-flex justify-content-between">
-                {% if post.user == user.username %}
+                {% if post.user == user %}
                 <p>Vous avez publié une critique</p>
                 {% else %}
                 <p>{{ post.user.username }} a publié un critique</p>

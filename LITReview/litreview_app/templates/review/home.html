@@ -1,25 +1,28 @@
 {% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+
 {% block title %}Home{% endblock %}
+{{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+
+
 {% block content %}
 <div class="cover">
-    <div class="container ">
+    <div class="container">
         <div class="row mt-5 pt-3">
-            <div class="col-md-5 offset-md-6">
+            <div class="col-md-5">
                 <div class="card my-3 shadow">
                     <div class="card-body">
                         <hr>
                         <h4>Inscrivez-vous maintenant</h4>
                         <hr>
                         <a href="{% url 'signin' %}">
-                        <button type="button" class="btn btn-primary">S'Inscrire</button>
+                            <button type="button" class="btn btn-primary">S'Inscrire</button>
                         </a>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <div class="container">
-        <div class="row mt-5 pt-3">
-            <div class="col-md-5 offset-md-6">
+            <div class="col-md-5 offset-md-2">
                 <div class="card my-3 shadow">
                     <div class="card-body">
                         <h4>Connectez-vous à votre Compte</h4>
@@ -46,4 +49,9 @@
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
 {% endblock %}

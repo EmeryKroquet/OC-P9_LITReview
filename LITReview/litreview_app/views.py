@@ -1,11 +1,10 @@
 from itertools import chain
 from urllib.parse import urlencode
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.db.models import CharField, Value
 from django.http import HttpResponse
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from .models import Ticket, Review, UserFollows, RATING_CHAR_ON, RATING_CHAR_OFF, RATING_RANGE
 from .forms import ReviewForm, TicketForm, UserFollowsForm
 from django.views import View
@@ -15,18 +14,29 @@ class HomeView(View):
     def get(self, request):
         return render(request, 'review/home.html')
 class CreateTicketView(LoginRequiredMixin, View):
-    def get(self, request):
-        form = TicketForm()
-        return render(request, "review/create_ticket.html", {"form": form})
+    def get(self, request, ticket_id=None):
+        ticket_instance = Ticket.objects.get(pk=ticket_id) if ticket_id is not None else None
+        form = TicketForm(instance=ticket_instance)
+        context = {
+            'form': form,
+            'ticket_id': ticket_id
+        }
+        return render(request, 'review/create_ticket.html', context)
 
-    def post(self, request):
-        form = TicketForm(request.POST, request.FILES)
+    def post(self, request, ticket_id=None):
+        next_url = request.POST.get('next', '/')
+        ticket_instance = Ticket.objects.get(pk=ticket_id) if ticket_id is not None else None
+        form = TicketForm(request.POST, request.FILES, instance=ticket_instance)
         if form.is_valid():
-            ticket = form.save(commit=False)
-            ticket.user = request.user
-            ticket.save()
-            return redirect("posts")
-        return redirect("flux")
+            obj = form.save(commit=False)
+            obj.user_id = request.user.id
+            obj.save()
+            return redirect(next_url)
+        context = {
+            'form': form,
+            'ticket_id': ticket_id
+        }
+        return render(request, 'review/create_ticket.html', context)
 
 
 class DeleteTicketView(LoginRequiredMixin, View):
@@ -63,23 +73,30 @@ class CreateReviewView(LoginRequiredMixin, View):
 
     def post(self, request):
         user = request.user
-
-        # Create ticket
-        ticket_form = TicketForm(request.POST, request.FILES)
-        if not ticket_form.is_valid():
-            return HttpResponse(f"<p>ticket_form errors: {ticket_form.errors}</p>")
-
-        ticket = ticket_form.save(commit=False)
-        ticket.user = user
-        ticket.save()
-        # Create review
-        review_form = ReviewForm(request.POST)
+        title = request.POST.get('title', False)
+        description = request.POST.get('description', False)
+        image = request.POST.get('image', False)
+        ticket_form = TicketForm({'title': title,
+                                  'description': description,
+                                  'image': image,
+                                  'user': user},
+                                 request.FILES)
+        if ticket_form.is_valid():
+            ticket = ticket_form.save()
+        else:
+            return HttpResponse(f"<p>ticket_form errors : {ticket_form.errors}</p>")
+        # review
+        headline = request.POST.get('headline', False)
+        body = request.POST.get('body', False)
+        rating = request.POST.get('rating', False)
+        review_form = ReviewForm({'headline': headline,
+                                  'body': body,
+                                  'rating': rating,
+                                  'user': user,
+                                  'ticket': ticket})
         if not review_form.is_valid():
-            return HttpResponse(f"<p>review_form errors: {review_form.errors}</p>")
-        review = review_form.save(commit=False)
-        review.user = user
-        review.ticket = ticket
-        review.save()
+            return HttpResponse(f"<p>review_form errors : {review_form.errors}</p>")
+        review_form.save()
         return redirect('flux')
 
 class CreateTicketAndReviewView(LoginRequiredMixin, View):
@@ -183,55 +200,37 @@ _MESSAGES = {
 }
 class FollowersView(LoginRequiredMixin, View):
     def get(self, request):
-        follows_form = UserFollowsForm()
-        user = User.objects.get(username=request.user.username)
-        user_subscriptions = list(UserFollows.objects.filter(user=user))
-        subscribers = [user_follow.user for user_follow in UserFollows.objects.filter(followed_user=user)]
-
-        error_message = request.GET.get('error_message') if request.GET.get('error_message') != 'None' else None
-        validated_message = request.GET.get('validated_message') if request.GET.get(
-            'validated_message') != 'None' else None
-        followed_user = request.GET.get('followed_user') if request.GET.get('followed_user') != 'None' else None
-        if error_message is not None:
-            error_message = _MESSAGES[error_message].format(username=followed_user)
-        else:
-            error_message = None
-        if validated_message is not None:
-            validated_message = _MESSAGES[validated_message].format(username=followed_user)
-        else:
-            validated_message = None
-
-            context = {'follows_form': follows_form,
-                       'subscriptions': user_subscriptions,
-                       'subscribers': subscribers,
-                       'error_message': error_message,
-                       'validated_message': validated_message}
-
-            return render(request, 'review/followers.html', context)
+        if request.method == "GET":
+            follow_form = UserFollowsForm()
+            users_followed = UserFollows.objects.filter(user=request.user)
+            followed_by = UserFollows.objects.filter(
+                followed_user=request.user)
+            return render(
+                request,
+                "review/followers.html",
+                {"follow_form": follow_form,
+                 "users_followed": users_followed,
+                 "followed_by": followed_by})
 
     def post(self, request):
-        error_message = None
-        validated_message = None
-        user = request.user
-        user_followed_username = request.POST.get('followed_user', False)
-        if not User.objects.filter(username=user_followed_username).exists():
-            error_message = 'unknown_user'
-        elif user_followed_username == user.username:
-            error_message = 'do_not_follow_yourself'
+        if request.method != "POST":
+            return redirect("followers")
+        form = UserFollowsForm(request.POST)
+        oneself = request.user.username
+        if form.is_valid() and (form.cleaned_data["followed_user"] != oneself):
+            try:
+                user_followed = User.objects.get(
+                    username=form.cleaned_data["followed_user"])
+                data = UserFollows(
+                    user=request.user,
+                    followed_user=user_followed)
+                data.save()
+                return redirect("flux")
+            except Exception:
+                return redirect("followers")
         else:
-            followed_user_id = User.objects.get(username=user_followed_username).id
-            follows_form = UserFollowsForm({'user': user,
-                                           'followed_user': followed_user_id})
-            if follows_form.is_valid():
-                follows_form.save()
-                validated_message = 'subscription_success'
-            else:
-                error_message = 'already_following'
-        query = {'error_message': error_message,
-                 'validated_message': validated_message,
-                 'followed_user': user_followed_username}
-        query_string = urlencode(query)
-        return redirect(f'/followers/?{query_string}')
+            return redirect("posts")
+
 
 class DeleteUserFollowView( LoginRequiredMixin, View):
     def get(self, request, followed_user_id):
@@ -266,7 +265,7 @@ class DeleteUserFollowView( LoginRequiredMixin, View):
         query = {
             'error_message': error_message,
             'validated_message': validated_message,
-                 'followed_user': follower_username
+                 'followed_user_id': follower_username
                  }
         query_string = urlencode(query)
 
