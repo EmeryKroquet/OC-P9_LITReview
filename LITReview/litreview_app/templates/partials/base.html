@@ -20,7 +20,7 @@
   <body>
     <nav class="navbar navbar-expand bg-primary btn-primary">
     <div class="container">
-        <a class="navbar-brand text-white" href="{% url 'home' %}">LITReview</a>
+        <a class="navbar-brand text-white" href="{% url 'flux' %}">LITReview</a>
         {% if request.user.is_authenticated %}
 
         <ul class="navbar-nav">
@@ -45,8 +45,8 @@
             </li>
 
             {% else %}
-              <a class="nav-link text-white" href="{% url 'login' %}">Login</a>
-              <a class="nav-link text-white" href="{% url 'signin' %}">SignIn</a>
+              <a class="nav-link text-white" href="{% url 'login' %}"></a>
+              <a class="nav-link text-white" href="{% url 'signin' %}"></a>
             {% endif %}
           </ul>
         </div>

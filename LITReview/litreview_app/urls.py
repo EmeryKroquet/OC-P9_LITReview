@@ -22,7 +22,7 @@ urlpatterns = [
          views.CreateTicketAndReviewView.as_view(), name='create_review_and_ticket'),
 
     path('followers/', views.FollowersView.as_view(), name='followers'),
-    path('followers/followed_user_id/<int:followed_user_id>/delete', views.DeleteUserFollowView.as_view(),
+    path('delete_user_follow/<int:followed_user_id>/delete/', views.DeleteUserFollowView.as_view(),
          name='delete_user_follow'),
 
 

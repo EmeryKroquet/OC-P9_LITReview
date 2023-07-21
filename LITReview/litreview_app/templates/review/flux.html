@@ -1,69 +1,90 @@
-{% extends 'partials/base.html' %}
+{% extends "partials/base.html" %}
 
 {% block content %}
-<div class="container text-center">
-  <h1 class="mt-4">Flux</h1>
-  <a href="{% url 'create_ticket' %}"><button class="btn btn-large btn-primary ">Demander une critique</button></a>
-  <a href="{% url 'create_review' %}"><button class="btn btn-large btn-primary">Créer une critique</button></a>
-   <br><hr>
 
-  <div class="row">
-    {% for post in posts %}
-      <div class="col-md-6">
-        <div class="card mb-4">
-          <div class="card-header">
-            <h5 class="card-title">
-              {% if post.type == 'TICKET' %}
-                Ticket: {{ post.title }}
-              {% else %}
-              <div  class="card-title">
-                        Vous avez publié un ticket sur
-                une Critique par: {{ post.user.username }}
-              {% endif %}
-            </h5>
-          </div>
-          <div class="card-body">
-            {% if post.type == 'TICKET' %}
-              <p class="card-text">{{ post.description }}</p>
-              {% if post.image %}
-                <img src="{{ post.image.url }}" class="img-fluid" alt="Ticket Image">
-              {% endif %}
-            {% else %}
-              <p class="card-text">{{ post.body }}</p>
-              <p class="card-text">Rating: {{ post.rating }}</p>
-            {% endif %}
-          </div>
-          <div class="card-footer">
-            {% if post.type == 'TICKET' %}
-              {% if post.display == 'NORMAL' %}
-                <span class="badge bg-success">Normal</span>
-              {% else %}
-                <span class="badge bg-warning text-dark">Special</span>
-              {% endif %}
-            {% endif %}
-            <span class="text-muted">{{ post.time_created }}</span>
-          </div>
-        </div>
-      </div>
-    {% endfor %}
+<div class="container ">
+  <h1 class="mt-4 text-center">Flux</h1>
+  <div class="mt-4 text-center">
+    <a href="{% url 'create_ticket' %}"><button class="btn btn-large btn-primary ">Demander une critique</button></a>
+   <a href="{% url 'create_review' %}"><button class="btn btn-large btn-primary">Créer une critique</button></a>
   </div>
 
-  <h2 class="mt-4">Tickets examiné par vous</h2>
-  {% for ticket in tickets_reviewed_by_user %}
-    <div class="card mb-4">
-      <div class="card-header">
-        <h5 class="card-title">Ticket: {{ ticket.title }}</h5>
-      </div>
-      <div class="card-body">
-        <p class="card-text">{{ ticket.description }}</p>
-        {% if ticket.image %}
-          <img src="{{ ticket.image.url }}" class="img-fluid" alt="Ticket Image">
+  <br><hr>
+
+  <div class="row">
+    <form method="POST">
+      {% for post in data %}
+        {% if post.headline is None %}
+          <div class="col-12 px-5 py-2">
+            <div class="border border-secondary p-2 position-relative">
+              {% if post.user.username == user.username %}
+                <p>Vous avez demandé une critique</p>
+              {% else %}
+                <p>{{ post.user.username }} a demandé une critique</p>
+              {% endif %}
+              <div class="position-absolute top-0 end-0 p-2">{{ post.time_created|date:"DATETIME_FORMAT" }}</div>
+              <h3>{{ post.title }}</h3>
+              <p>{{ post.description }}</p>
+              {% if post.image %}
+                <div class="p-3">
+                  <img src="{{ post.image.url }}" class="img-fluid" alt="Post Image">
+                </div>
+              {% endif %}
+              {% if post.user == request.user %}
+                <div class="position-absolute bottom-0 end-0 p-2">
+                  <a href="{% url 'edit_ticket' post.id %}" class="btn btn-primary me-2">Modifier</a>
+                        <a href="{% url 'delete_ticket' post.id %}" class="btn btn-danger">Supprimer</a>
+                </div>
+              {% else %}
+                <div class="position-absolute bottom-0 end-0 p-2">
+                  <a href="{% url 'create_ticket' post.id %}"  class="btn btn-primary">Créer une critique</a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% else %}
+          <div class="col-12 px-5 py-2">
+            <div class="border border-secondary p-2 position-relative">
+              {% if post.user.username == user.username %}
+                <p>Vous avez publié une critique</p>
+              {% else %}
+                <p>{{ post.user.username }} a publié une critique</p>
+              {% endif %}
+              <div class="position-absolute top-0 end-0 p-2">{{ post.time_created|date:"DATETIME_FORMAT" }}</div>
+              <h3>{{ post.headline }} -
+                {% for i in range_5 %}
+                  {% if post.rating > i %}
+                    &#9733;
+                  {% else %}
+                    &#9734;
+                  {% endif %}
+                {% endfor %}
+              </h3>
+              <p>{{ post.body }}</p>
+              {% if post.user == request.user %}
+                <div class="position-absolute bottom-0 end-0 p-2">
+                  <a href="{% url 'edit_review' post.id %}" class="btn btn-primary me-2">Modifier</a>
+                <a href="{% url 'delete_review' post.id %}" class="btn btn-danger">Supprimer</a>
+                </div>
+              {% endif %}
+              <div class="px-2 pb-5">
+                <div class="border border-secondary p-2">
+                  <p>{{ post.ticket.user.username }} a publié un ticket</p>
+                  <div class="position-absolute top-0 end-0 p-2">{{ post.ticket.time_created|date:"DATETIME_FORMAT" }}</div>
+                  <h3>{{ post.ticket.title }}</h3>
+                  <p>{{ post.ticket.description }}</p>
+                  {% if post.ticket.image %}
+                    <div class="p-3">
+                      <img src="{{ post.ticket.image.url }}" class="img-fluid" alt="Ticket Image">
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
         {% endif %}
-      </div>
-      <div class="card-footer">
-        <span class="text-muted">{{ ticket.time_created }}</span>
-      </div>
-    </div>
-  {% endfor %}
+      {% endfor %}
+    </form>
+  </div>
 </div>
-{% endblock %}
+{% endblock content %}

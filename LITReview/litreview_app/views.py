@@ -1,8 +1,9 @@
 from itertools import chain
+from operator import attrgetter
 from urllib.parse import urlencode
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.db.models import CharField, Value
+from django.db.models import CharField, Value, Q
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from .models import Ticket, Review, UserFollows, RATING_CHAR_ON, RATING_CHAR_OFF, RATING_RANGE
@@ -12,7 +13,8 @@ from django.views import View
 
 class HomeView(View):
     def get(self, request):
-        return render(request, 'review/home.html')
+        return redirect("flux") if request.user.is_authenticated else redirect("login")
+
 class CreateTicketView(LoginRequiredMixin, View):
     def get(self, request, ticket_id=None):
         ticket_instance = Ticket.objects.get(pk=ticket_id) if ticket_id is not None else None
@@ -59,7 +61,7 @@ class EditTicketView(LoginRequiredMixin, View):
         if not form.is_valid():
             return HttpResponse(f"<p>{form.errors}</p>")
         form.save()
-        return redirect('/posts/')
+        return redirect('posts')
 
 
 class CreateReviewView(LoginRequiredMixin, View):
@@ -190,14 +192,6 @@ class PostsView(LoginRequiredMixin, View):
                    'rating_char_off': RATING_CHAR_OFF}
         return render(request, self.template_name, context)
 
-_MESSAGES = {
-    'unknown_user': "Utilisateur inconnu !",
-    'do_not_follow_yourself': "Veuillez renseigner un nom d'utilisateur autre que le votre.",
-    'subscription_success': "Vous suivez désormais l'utilisateur {username} !",
-    'already_following': "Vous suivez déjà l'utilisateur {username} !",
-    'stopped_subscription': "Vous ne suivez désormais plus l'utilisateur {username}"
-
-}
 class FollowersView(LoginRequiredMixin, View):
     def get(self, request):
         if request.method == "GET":
@@ -233,88 +227,74 @@ class FollowersView(LoginRequiredMixin, View):
 
 
 class DeleteUserFollowView( LoginRequiredMixin, View):
-    def get(self, request, followed_user_id):
-        user = request.user
-        followed_user = User.objects.get(id=followed_user_id)
-        subscription_to_delete = UserFollows.objects.get(user=user, followed_user=followed_user)
-        subscription_to_delete.delete()
-        validated_message = 'stopped_subscription'
-        query = {'validated_message': validated_message,
-                     'followed_user': followed_user.username}
-        query_string = urlencode(query)
-        return redirect(f'followers?{query_string}')
-
-
-    def post(self, request):
-        user = request.user
-        follower_username = request.POST.get('followed_user')
-
-        if not User.objects.filter(username=follower_username).exists():
-            error_message = 'unknown_user'
-        elif follower_username == user.username:
-            error_message = 'do_not_follow_yourself'
-        else:
-            follower_user_id = User.objects.get(username=follower_username).id
-            follows_form = UserFollowsForm({'user': user, 'followed_user': follower_user_id})
-            if follows_form.is_valid():
-                follows_form.save()
-                validated_message = 'subscription_success'
-            else:
-                error_message = 'already_following'
-
-        query = {
-            'error_message': error_message,
-            'validated_message': validated_message,
-                 'followed_user_id': follower_username
-                 }
-        query_string = urlencode(query)
-
-        return redirect(f'followers?{query_string}')
+    ...
 
 
 class FluxView(LoginRequiredMixin, View):
-    template_name = 'users:login.html'
+    template_name = "review/flux.html"
+
     def get(self, request):
-        user = request.user
-        followed_users_ids = self.get_followed_users_ids(user)
-        reviews = self.get_users_reviews(user, followed_users_ids)
-        tickets = self.get_users_tickets(user, followed_users_ids)
-        user_reviews = Review.objects.filter(user_id=user.id)
-        tickets_reviewed_by_user = self.get_tickets_and_reviewed_by_user(user_reviews)
+        if request.user.is_authenticated:
+            # Get objects:
+            tickets = Ticket.objects.all()
+            reviews = Review.objects.all()
+            users = UserFollows.objects.all()
+            # 1. Get all tickets from user
+            ticket_user = tickets.filter(user=request.user)
+            # 2. Get all tickets from followed_user-s
+            ticket_followed_user = tickets.filter(
+                user__id__in=users.filter(
+                    user=request.user).values_list("followed_user_id")
+            )
 
-        posts = sorted(
-            list(chain(tickets, reviews)),
-            key=lambda post: post.time_created,
-            reverse=True
-        )
+            all_tickets = ticket_user | ticket_followed_user
+            # 1. Get all reviews from user
+            review_user = reviews.filter(user=request.user)
+            # 2. Get all reviews from followed_user-s
+            review_followed_user = reviews.filter(
+                user__id__in=users.filter(
+                    user=request.user).values_list("followed_user_id")
+            )
+            # 3. Get reviews from un-followed_user-s that review the user's ticket
+            review_unfollowed_reviewed = reviews.filter(
+                ticket__id__in=tickets.filter(
+                    user=request.user).values_list("id")
+            )
 
-        return render(request, 'review/flux.html',
-                      {'nav_bar': 'flux',
-                       'posts': posts,
-                       'tickets': tickets,
-                       'reviews': reviews,
-                       'tickets_reviewed_by_user': tickets_reviewed_by_user})
+            all_reviews = (
+                    review_user | review_followed_user | review_unfollowed_reviewed
+            )
+            # Sort all posts by -time_created:
+            flux_posts = list(
+                sorted(chain(all_tickets, all_reviews),
+                       key=attrgetter("time_created"),
+                       reverse=True)
+            )
+            return render(
+                request,
+                self.template_name,
+                context={"data": flux_posts, "range_5": range(5)}
+            )
+        else:
+            return redirect("login")
 
-    @staticmethod
-    def get_followed_users_ids(user):
-        return UserFollows.objects.filter(user=user).values_list('followed_user_id', flat=True)
 
-    @staticmethod
-    def get_users_reviews(user, followed_users_ids):
-        reviews = Review.objects.filter(user_id__in=list(chain([user.id], followed_users_ids)))
-        for review in reviews:
-            review.type = 'REVIEW'
-        return reviews
+class DeleteContentView(View):
+    """Delete the content (ticket or review) identified by its id."""
 
-    @staticmethod
-    def get_users_tickets(user, followed_users_ids):
-        tickets = Ticket.objects.filter(user_id__in=list(chain([user.id], followed_users_ids)))
-        for ticket in tickets:
-            ticket.type = 'TICKET'
-            ticket.display = 'NORMAL'
-        return tickets
+    def get_redirect_url(self, content):
+        if content == "ticket":
+            return "posts"
+        return "posts" if content == "review" else "flux"
 
-    @staticmethod
-    def get_tickets_and_reviewed_by_user(user_reviews):
-        return Ticket.objects.filter(review__in=user_reviews)
-
+    def get(self, request, content, id_delete):
+        try:
+            if content == "ticket":
+                Ticket.objects.get(Q(id=id_delete) & Q(user=request.user)).delete()
+            elif content == "review":
+                Review.objects.get(Q(id=id_delete) & Q(user=request.user)).delete()
+        except Ticket.DoesNotExist:
+            pass
+        except Review.DoesNotExist:
+            pass
+        return redirect(self.get_redirect_url(content))

@@ -1,8 +1,9 @@
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
 from django.views import View
 
-from .forms import SigninForm, UserUpdateForm, ProfileUpdateForm
+from .forms import SigninForm, UserUpdateForm, ProfileUpdateForm, LoginForm
 
 
 class SigninView(View):
@@ -19,7 +20,30 @@ class SigninView(View):
         context = {'form': form}
         return render(request, 'users/signin.html', context)
 
+class LoginView(View):
+    """View for user login."""
+    def get(self, request):
+        """Render the login page with the login form."""
+        if request.user.is_authenticated:
+            return redirect("flux")
+        form = LoginForm()
+        context = {"form": form
+                   }
+        return render(request, "users/login.html", context)
 
+    def post(self, request):
+        """Handle the login form submission."""
+        if request.user.is_authenticated:
+            return redirect("flux")
+        user = request.POST["username"]
+        password = request.POST["password"]
+        user = authenticate(request, username=user, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect("flux")
+        else:
+            return redirect("login")
 class ProfileView(LoginRequiredMixin, View):
     def get(self, request):
         u_form = UserUpdateForm(instance=request.user)

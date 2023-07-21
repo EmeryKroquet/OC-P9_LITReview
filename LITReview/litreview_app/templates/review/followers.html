@@ -25,7 +25,7 @@
                     <div class="col-md-6">
                         <div class="input-group">
                             <div class="form-control">{{ user.followed_user }}</div>
-                            <a href="/followers/delete_user_follow/{{ user.id }}/" type="button"
+                            <a href="{% url 'delete_user_follow' user.id %}" type="button"
                                class="btn btn-danger">Désabonner</a>
                         </div>
                     </div>

@@ -1,28 +1,39 @@
 {% extends 'partials/base.html' %}
+
 {% block title %}Login Page{% endblock %}
+
 {% load crispy_forms_tags %}
+
 {% block content %}
 <div class="cover">
     <div class="container">
         <div class="row mt-5 pt-3">
-            <div class="col-md-5 offset-md-6">
+            <div class="col-md-6">
                 <div class="card my-3 shadow">
                     <div class="card-body">
-                        <h4>Connectez-vous à votre Compte</h4>
+                        <h4 class="text-center">Inscrivez-vous maintenant</h4>
+                        <hr>
+                        <div class="text-center">
+                            <a href="{% url 'signin' %}" class="btn btn-primary">S'Inscrire</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card my-3 shadow">
+                    <div class="card-body">
+                        <h4 class="text-center">Connectez-vous à votre Compte</h4>
                         <hr>
                         <form method="POST">
                             {% csrf_token %}
                             {{ form|crispy }}
-                            <input class="btn btn-primary btn-block" type="submit" value="Connecter">
+                            <button class="btn btn-primary btn-block" type="submit">Connecter</button>
                         </form>
                         <hr>
                         <div class="text-center my-3">
-                            <a href="{% url 'password_reset' %}">Mot de passe Oublier?</a>
+                            <a href="{% url 'password_reset' %}">Mot de passe oublié?</a>
                         </div>
                         <hr>
-                        <div class="text-center">
-                            <a class="btn btn-success" href="{% url 'signin' %}">Créer un Compte</a>
-                        </div>
                     </div>
                 </div>
             </div>
