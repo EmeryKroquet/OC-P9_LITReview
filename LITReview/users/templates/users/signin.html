@@ -13,9 +13,9 @@
                         <form method="POST">
                             {% csrf_token %}
                             {{ form|crispy }}
+                            <a class="btn btn-outline-primary me-md-2" type="button" href="javascript:history.back()">
+                                Retourner</a>
                             <input class="btn btn-primary btn-block" type="submit" value="S'Inscrire">
-                            <small class="text-muted">Déjà un Compte? <a href="{% url 'login' %}" class="ml-2">
-                              Connecter Ici</a></small>
                         </form>
                     </div>
                 </div>

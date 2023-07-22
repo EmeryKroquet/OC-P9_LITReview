@@ -2,35 +2,77 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-10">
-      <div class="container p-4 my-4 border rounded">
-            <h2 class="card-title text-center">Critique</h2>
-            <form method="post">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label for="{{ review_form.headline.id_for_label }}">Titre</label>
-                    {{ review_form.headline|as_crispy_field }}
-                </div>
-                <div class="mb-3 form-check-inline">
-                    <label>Note:</label>
-                     {{ review_form.rating|safe }}
-                </div>
-                <div class="mb-3">
-                    <label for="{{ review_form.body.id_for_label }}">Commentaire</label>
-                    {{ review_form.body|as_crispy_field }}
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <a href="{% url 'flux' %}" class="btn btn-secondary">Annuler</a>
+    <form method="post" enctype="multipart/form-data">
+        <p></p>
+        <div class="text-center">
+        <h3> Créer une Critique</h3>
+        </div>
+        {% csrf_token %}
+        <div class="p-5">
+            {% if ticket.title|length > 1 %}
+                <div class="px-5 py-2">
+                    <div class="position-relative">
+                        <div class="border border-secondary p-2">
+                            Vous êtes en train de poster en réponse à
+                            <div class="border border-secondary p-2">
+                                <p>{{ ticket.user.username }} a publié un ticket</p>
+                                <div class="position-absolute top-0 end-0 p-5">{{ ticket.time_created }}</div>
+                                <h3>{{ ticket.title }}</h3>
+                                {{ ticket.description }}
+                                {% if ticket.image %}
+                                    <div class="p-3">
+                                        <img src="{{ ticket.image.url }}" class="img-fluid" alt="Ticket Image">
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    <div class="col">
-                        <button type="submit" class="btn btn-primary">Envoyer</button>
+                </div>
+            {% else %}
+                <div class="border border-secondary p-2">
+                <p>Livre / Article</p>
+                <div class="px-5 py-2">
+                    <label for="id_title" class="form-label">Titre</label>
+                    {{ ticket.title | as_crispy_field }}
+                    <label for="id_description" class="form-label">Description</label>
+                    {{ ticket.description | as_crispy_field}}
+                    <label for="id_image" class="form-label">Image</label>
+                    <div class="pb-4 px-2">
+                        {{ ticket.image }}
+                    </div>
                     </div>
                 </div>
-            </form>
-        </dv>
-    </div>
-</div>
-{% endblock %}
+            {% endif %}
+
+
+            <div class="border border-secondary p-2">
+                <p>Critique</p>
+                <div class="px-5 py-2">
+                    <label for="id_headline" class="form-label">Titre</label>
+                    {{ form.headline|as_crispy_field }}
+                </div>
+                <div class="px-5 py-2">
+                    <label for="id_rating" class="form-label">Note</label>
+                    <div class="row">
+                        {% for rate in form.rating %}
+                            <div class="col">
+                                {{ rate }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="px-5 py-2">
+                    <label for="id_body" class="form-label">Commentaire</label>
+                    {{ form.body|as_crispy_field }}
+                </div>
+
+                <div class="px-5 py-2">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end pt-2">
+                        <button type="submit" class="btn btn-primary">Submit review</button>
+                        <a class="btn btn-outline-primary me-md-2" type="button" href="javascript:history.back()">Back</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock content %}

@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.db.models import CharField, Value, Q
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Ticket, Review, UserFollows, RATING_CHAR_ON, RATING_CHAR_OFF, RATING_RANGE
 from .forms import ReviewForm, TicketForm, UserFollowsForm
 from django.views import View
@@ -39,71 +39,74 @@ class CreateTicketView(LoginRequiredMixin, View):
         }
         return render(request, 'review/create_ticket.html', context)
 
-class CreateReviewView(LoginRequiredMixin, View):
-    def get(self, request):
-        review_form = ReviewForm()
-        ticket_form = TicketForm()
-        context = {'review_form': review_form,
-                   'ticket_form': ticket_form
-                   }
-        return render(request, 'review/create_review.html', context)
-
-    def post(self, request):
-        user = request.user
-        title = request.POST.get('title', False)
-        description = request.POST.get('description', False)
-        image = request.POST.get('image', False)
-        ticket_form = TicketForm({'title': title,
-                                  'description': description,
-                                  'image': image,
-                                  'user': user},
-                                 request.FILES)
-        if ticket_form.is_valid():
-            ticket = ticket_form.save()
+class CreateReviewView(View):
+    def get(self, request, id_ticket=None):
+        if id_ticket:
+            ticket = get_object_or_404(Ticket, id=id_ticket)
+            form = ReviewForm()
+            context = {"form": form,
+                       "ticket": ticket
+                       }
+            return render(request, "review/create_review.html", context)
         else:
-            return HttpResponse(f"<p>ticket_form errors : {ticket_form.errors}</p>")
-        # review
-        headline = request.POST.get('headline', False)
-        body = request.POST.get('body', False)
-        rating = request.POST.get('rating', False)
-        review_form = ReviewForm({'headline': headline,
-                                  'body': body,
-                                  'rating': rating,
-                                  'user': user,
-                                  'ticket': ticket})
-        if not review_form.is_valid():
-            return HttpResponse(f"<p>review_form errors : {review_form.errors}</p>")
-        review_form.save()
-        return redirect('flux')
+            ticket = TicketForm()
+            form = ReviewForm()
+            context = {"form": form,
+                       "ticket": ticket
+                       }
+            return render(request, "review/create_review.html", context)
 
-class CreateTicketAndReviewView(LoginRequiredMixin, View):
-    def get(self, request, ticket_id):
-        review_form = ReviewForm()
-        ticket = Ticket.objects.get(id=ticket_id)
-        context = {'review_form': review_form,
-                   'ticket': ticket
-                   }
-        return render(request, 'review/create_review_and_ticket.html', context)
+    def post(self, request, id_ticket=None):
+        if id_ticket:
+            ticket = get_object_or_404(Ticket, id=id_ticket)
+            form = ReviewForm(request.POST)
+            if not form.is_valid():
+                return redirect(f"/create_review/{id_ticket}/")
+            ticket = ticket
+            headline = form.cleaned_data["headline"]
+            rating = form.cleaned_data["rating"]
+            body = form.cleaned_data["body"]
+            user = request.user
+            data = Review(ticket=ticket, headline=headline, user=user, rating=rating, body=body)
+            data.save()
+        else:
+            ticket_form = TicketForm(request.POST, request.FILES)
+            review_form = ReviewForm(request.POST)
+            if not ticket_form.is_valid() or not review_form.is_valid():
+                return redirect("flux")
+            title = ticket_form.cleaned_data["title"]
+            description = ticket_form.cleaned_data["description"]
+            try:
+                image = request.FILES["image"]
+            except KeyError:
+                image = None
+            user = request.user
+            data_ticket = Ticket(title=title, description=description, image=image, user=user)
+            data_ticket.save()
 
-    def post(self, request, ticket_id):
-        # ticket
-        ticket = Ticket.objects.get(id=ticket_id)
-        # review
-        current_user = request.user
-        headline = request.POST.get('headline', False)
-        body = request.POST.get('body', False)
-        rating = request.POST.get('rating', False)
-        review_form = ReviewForm()
-        context = {'headline': headline,
-                                  'body': body,
-                                  'rating': rating,
-                                  'user': current_user,
-                                  'ticket': ticket
-                   }
-        if not review_form.is_valid():
-            return HttpResponse(f"<p>review_form errors : {review_form.errors}</p>", context)
-        review_form.save()
-        return redirect('flux')
+            ticket = data_ticket
+            headline = review_form.cleaned_data["headline"]
+            rating = review_form.cleaned_data["rating"]
+            body = review_form.cleaned_data["body"]
+            user = request.user
+            data_review = Review(ticket=ticket, headline=headline, user=user, rating=rating, body=body)
+            data_review.save()
+
+        return redirect("/posts/")
+
+
+def _extracted_from_post_6(id_modify, request, form):
+    ticket = Ticket.objects.get(Q(id=id_modify) & Q(user=request.user))
+    ticket.title = form.cleaned_data["title"]
+    ticket.description = form.cleaned_data["description"]
+
+    if request.FILES:
+        ticket.image = request.FILES["image"]
+    ticket.save()
+
+    # Optionnal
+    Review.objects.filter(ticket__id__in=Ticket.objects.filter(id=id_modify).values_list("id")).delete()
+
 
 class ModifyContentView(LoginRequiredMixin, View):
     """Allow user to modify their own tickets and reviews."""
@@ -128,27 +131,17 @@ class ModifyContentView(LoginRequiredMixin, View):
                 return render(request, 'review/modify_content.html', {"form": form, "ticket": review.ticket})
 
         except Ticket.DoesNotExist:
-            return redirect("flux")
+            return redirect("/flux/")
         except Review.DoesNotExist:
-            return redirect("flux")
+            return redirect("/flux/")
 
     def post(self, request, content, id_modify):
         try:
             if content == "ticket":
                 form = TicketForm(request.POST, request.FILES)
                 if form.is_valid():
-                    ticket = Ticket.objects.get(Q(id=id_modify) & Q(user=request.user))
-                    ticket.title = form.cleaned_data["title"]
-                    ticket.description = form.cleaned_data["description"]
-
-                    if request.FILES:
-                        ticket.image = request.FILES["image"]
-                    ticket.save()
-
-                    # Optionnal
-                    Review.objects.filter(ticket__id__in=Ticket.objects.filter(id=id_modify).values_list("id")).delete()
-
-                return redirect("posts")
+                    _extracted_from_post_6(id_modify, request, form)
+                return redirect("/posts/")
 
             elif content == "review":
                 form = ReviewForm(request.POST)
@@ -162,9 +155,12 @@ class ModifyContentView(LoginRequiredMixin, View):
                 return redirect("posts")
 
         except Ticket.DoesNotExist:
-            return redirect("flux")
+            return redirect("/flux/")
         except Review.DoesNotExist:
-            return redirect("flux")
+            return redirect("/flux/")
+
+    # TODO Rename this here and in `post`
+
 
 RATING_RANGE = range(1, 6)
 RATING_CHAR_ON = '★'

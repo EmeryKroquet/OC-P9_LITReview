@@ -25,7 +25,7 @@
                     <div class="col-md-6">
                         <div class="input-group">
                             <div class="form-control">{{ user.followed_user }}</div>
-                            <a href="{% url 'delete_user_follow' user.id %}" type="button"
+                            <a href="/follow/delete/{{user.id}}/" type="button"
                                class="btn btn-danger">Désabonner</a>
                         </div>
                     </div>
@@ -39,7 +39,7 @@
                 <div class="row justify-content-center mb-2">
                     <div class="col-md-6">
                         <div class="input-group">
-                            <div class="form-control">{{ user.user }}</div>
+                            <div class="list-group-item list-group-item-action">{{ user.user }}</div>
                         </div>
                     </div>
                 </div>

@@ -8,6 +8,7 @@ RATING_CHAR_OFF = '☆'
 RATING_RANGE = range(5)
 
 class Ticket(models.Model):
+    objects = None
     title = models.CharField(max_length=128, null=True, blank=True)
     description = models.TextField(max_length=2048, blank=True)
     user = models.ForeignKey(
