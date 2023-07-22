@@ -1,6 +1,5 @@
 from itertools import chain
 from operator import attrgetter
-from urllib.parse import urlencode
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.db.models import CharField, Value, Q
@@ -39,30 +38,6 @@ class CreateTicketView(LoginRequiredMixin, View):
             'ticket_id': ticket_id
         }
         return render(request, 'review/create_ticket.html', context)
-
-
-class DeleteTicketView(LoginRequiredMixin, View):
-    def get(self, request, ticket_id):
-        ticket = Ticket.objects.get(id=ticket_id)
-        ticket.delete()
-        return redirect('posts')
-
-class EditTicketView(LoginRequiredMixin, View):
-    """View to edit a ticket"""
-    def get(self, request, ticket_id):
-        ticket = Ticket.objects.get(id=ticket_id)
-        form = TicketForm(instance=ticket)
-        context = {'form': form, 'edit': True}
-        return render(request, 'review/create_ticket.html', context)
-
-    def post(self, request, ticket_id):
-        ticket = Ticket.objects.get(id=ticket_id)
-        form = TicketForm(request.POST, request.FILES, instance=ticket)
-        if not form.is_valid():
-            return HttpResponse(f"<p>{form.errors}</p>")
-        form.save()
-        return redirect('posts')
-
 
 class CreateReviewView(LoginRequiredMixin, View):
     def get(self, request):
@@ -130,68 +105,92 @@ class CreateTicketAndReviewView(LoginRequiredMixin, View):
         review_form.save()
         return redirect('flux')
 
-class EditReviewView(LoginRequiredMixin, View):
-    def get(self, request, review_id):
-        review = Review.objects.get(id=review_id)
-        review_form = ReviewForm(instance=review)
-        ticket = review.ticket
-        context = {
-            'review_form': review_form,
-            'ticket': ticket,
-            'edit': True
-        }
-        return render(request, 'review/create_review_and_ticket.html', context)
+class ModifyContentView(LoginRequiredMixin, View):
+    """Allow user to modify their own tickets and reviews."""
 
-    def post(self, request, review_id):
-        review = Review.objects.get(id=review_id)
-        ticket = Ticket.objects.get(id=review.ticket.id)
-        user = request.user
-        headline = request.POST.get('headline', False)
-        body = request.POST.get('body', False)
-        rating = request.POST.get('rating', False)
-        review_form = ReviewForm({'headline': headline,
-                                  'body': body,
-                                  'rating': rating,
-                                  'user': user,
-                                  'ticket': ticket}, instance=review)
-        if review_form.is_valid():
-            review_form.save()
-            return redirect('posts')
-        else:
-            return HttpResponse("<p>Form errors</p>")
+    def get(self, request, content, id_modify):
+        try:
+            if content == "ticket":
+                ticket = Ticket.objects.get(Q(id=id_modify) & Q(user=request.user))
+                form = TicketForm(instance=ticket, initial={
+                    'title': ticket.title,
+                    'description': ticket.description,
+                })
+                return render(request, 'review/modify_content.html', {"form": form, "old_image": ticket.image})
 
+            elif content == "review":
+                review = Review.objects.get(Q(id=id_modify) & Q(user=request.user))
+                form = ReviewForm(instance=review, initial={
+                    'headline': review.headline,
+                    'rating': review.rating,
+                    'body': review.body,
+                })
+                return render(request, 'review/modify_content.html', {"form": form, "ticket": review.ticket})
 
+        except Ticket.DoesNotExist:
+            return redirect("flux")
+        except Review.DoesNotExist:
+            return redirect("flux")
 
-class DeleteReviewView(LoginRequiredMixin, View):
-    def get(self, request, review_id):
-        review = Review.objects.get(id=review_id)
-        review.delete()
-        return redirect('posts')
+    def post(self, request, content, id_modify):
+        try:
+            if content == "ticket":
+                form = TicketForm(request.POST, request.FILES)
+                if form.is_valid():
+                    ticket = Ticket.objects.get(Q(id=id_modify) & Q(user=request.user))
+                    ticket.title = form.cleaned_data["title"]
+                    ticket.description = form.cleaned_data["description"]
 
-class PostsView(LoginRequiredMixin, View):
-    template_name = 'review/posts.html'
+                    if request.FILES:
+                        ticket.image = request.FILES["image"]
+                    ticket.save()
 
+                    # Optionnal
+                    Review.objects.filter(ticket__id__in=Ticket.objects.filter(id=id_modify).values_list("id")).delete()
+
+                return redirect("posts")
+
+            elif content == "review":
+                form = ReviewForm(request.POST)
+                if form.is_valid():
+                    review = Review.objects.get(Q(id=id_modify) & Q(user=request.user))
+                    review.headline = form.cleaned_data["headline"]
+                    review.rating = form.cleaned_data["rating"]
+                    review.body = form.cleaned_data["body"]
+                    review.save()
+
+                return redirect("posts")
+
+        except Ticket.DoesNotExist:
+            return redirect("flux")
+        except Review.DoesNotExist:
+            return redirect("flux")
+
+RATING_RANGE = range(1, 6)
+RATING_CHAR_ON = '★'
+RATING_CHAR_OFF = '☆'
+
+class PostsView(LoginRequiredMixin ,View):
     def get(self, request):
-        user = request.user
-        ticket = Ticket.objects.filter(user=user)
-        ticket = ticket.annotate(content_type=Value('TICKET', CharField()))
-
-        ticket_not_reviewed = ticket.exclude(id__in=[review.ticket.id for review in Review.objects.filter(
-            ticket__in=ticket)]).annotate(ticket_status=Value('not_reviewed', CharField()))
-        ticket_reviewed = ticket.filter(
-            id__in=[review.ticket.id for review in Review.objects.filter(ticket__in=ticket)]).annotate(
+        own_tickets = Ticket.objects.filter(user=request.user)
+        own_reviews = Review.objects.filter(user=request.user)
+        own_data = sorted(
+            chain(own_tickets, own_reviews),
+            key=attrgetter("time_created"), reverse=True)
+        ticket_not_reviewed = own_tickets.exclude(id__in=[review.ticket.id for review in Review.objects.filter(
+            ticket__in=own_tickets)]).annotate(ticket_status=Value('not_reviewed', CharField()))
+        ticket_reviewed = own_tickets.filter(
+            id__in=[review.ticket.id for review in Review.objects.filter(ticket__in=own_tickets)]).annotate(
             ticket_status=Value('already_reviewed', CharField()))
-
-        review = Review.objects.filter(user=user)
-        review = review.annotate(content_type=Value('REVIEW', CharField()))
-
-        posts = chain(ticket_not_reviewed, ticket_reviewed, review)
+        posts = chain(ticket_not_reviewed, ticket_reviewed, own_reviews)
         context = {'posts': posts,
                    'rating_range': RATING_RANGE,
                    'rating_char_on': RATING_CHAR_ON,
-                   'rating_char_off': RATING_CHAR_OFF}
-        return render(request, self.template_name, context)
-
+                   'rating_char_off': RATING_CHAR_OFF,
+                   "data": own_data,
+                   "range": range(5)
+                   }
+        return render(request, "review/posts.html", context)
 class FollowersView(LoginRequiredMixin, View):
     def get(self, request):
         if request.method == "GET":
@@ -210,8 +209,8 @@ class FollowersView(LoginRequiredMixin, View):
         if request.method != "POST":
             return redirect("followers")
         form = UserFollowsForm(request.POST)
-        oneself = request.user.username
-        if form.is_valid() and (form.cleaned_data["followed_user"] != oneself):
+        user = request.user.username
+        if form.is_valid() and (form.cleaned_data["followed_user"] != user):
             try:
                 user_followed = User.objects.get(
                     username=form.cleaned_data["followed_user"])
@@ -227,7 +226,12 @@ class FollowersView(LoginRequiredMixin, View):
 
 
 class DeleteUserFollowView( LoginRequiredMixin, View):
-    ...
+    def get(self, request, id_delete):
+        try:
+            UserFollows.objects.get(Q(id=id_delete) & Q(user=request.user)).delete()
+            return redirect("followers")
+        except UserFollows.DoesNotExist:
+            return redirect("followers")
 
 
 class FluxView(LoginRequiredMixin, View):
@@ -279,7 +283,7 @@ class FluxView(LoginRequiredMixin, View):
             return redirect("login")
 
 
-class DeleteContentView(View):
+class DeleteContentView(LoginRequiredMixin, View):
     """Delete the content (ticket or review) identified by its id."""
 
     def get_redirect_url(self, content):

@@ -1,10 +1,7 @@
 # Projet Academique Openclassrooms 
 # Thème : Développez une application Web en utilisant Django
 
-<h3 align="center">
-    <img alt="Logo" title="#Logo D'entreprise" src="/images/LITrevu-banner.png">
-    <br>
-</h3>
+<img src="media/LITrevu-banner.png" alt="">
 
 
 # OpenClassrooms Projet P9
