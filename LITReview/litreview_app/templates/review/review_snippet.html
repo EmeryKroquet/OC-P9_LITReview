@@ -1,0 +1,83 @@
+
+<div class="container p-4 my-4 border">
+
+<!--- Review -->
+  <div class="card-body">
+    {% if review.user == user %}
+
+
+       <h6 class="card-subtitle mb-2 text-muted">You wrote a review!</h6>
+
+    {% else %}
+
+    <h6 class="card-subtitle mb-2 text-muted">{{review.user}} wrote a review!</h6>
+
+    {% endif %}
+
+    <p class="card-text float-right">{{review.time_created}}</p>
+    <br>
+    <h5 class="card-title">{{review.headline}}</h5>
+    <div class="rating">
+        {% for i in range_5 %}
+          {% if post.rating > i %}
+            &#9733;
+          {% else %}
+            &#9734;
+          {% endif %}
+        {% endfor %}
+    </div>
+    <br>
+    <h6 class="card-subtitle mb-2 text-muted">{{review.body}}</h6>
+
+  </div>
+
+
+
+<!--- Ticket -->
+
+{% if post.ticket.image %}
+  <div class="p-3">
+    <img src="{{ post.ticket.image.url }}" class="img-fluid" alt="Ticket Image">
+  </div>
+{% endif %}
+  <div class="card-body">
+    <h5 class="card-title">{{review.ticket.title}}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">asked by: {% if ticket.user == user %} You {% else %} {{ticket.user}} {% endif %}</h6>
+    <p class="card-text">{{review.ticket.description}}</p>
+  </div>
+</div>
+<br>
+
+
+{% if request.resolver_match.url_name == 'flux' %}
+
+  {% if review.user != user and ticket not in tickets_reviewed_by_user %}
+
+    <a href="{% url 'create_review' ticket_id=review.ticket.id%}" >
+      <button class="btn btn-primary btn-large"> Créer une critique</button>
+    </a>
+
+  {% endif %}
+
+{% else %}
+
+  {% if review.user == user %}
+
+  <a href="{% url 'edit_review' review_id=review.id %}" >
+      <button class="btn btn-primary btn-large">
+        Modifier
+      </button>
+    </a>
+
+    <a href="{% url 'delete_review' review_id=review.id %}" >
+      <button class="btn btn-danger btn-large">
+        Supprimer
+      </button>
+    </a>
+
+  {% endif %}
+
+{% endif %}
+
+
+</div>

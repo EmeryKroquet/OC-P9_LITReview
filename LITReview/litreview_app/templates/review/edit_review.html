@@ -1,0 +1,71 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="p-5">
+            <p class="text-center">Modifier votre ticket</p>
+            <div class="position-relative">
+                <div class="border border-secondary px-2 pb-5 pt-2">
+                    {% if ticket %}
+                    Vous êtes en train de poster en réponse à {{ ticket.user.username }}
+                    <div class="border border-secondary px-2 pb-5 pt-2">
+                        <p>{{ ticket.user.username }} a publié un ticket </p>
+                        <div class="position-absolute top-0 end-0 p-5">{{ ticket.time_created }}</div>
+                        <h3>{{ form.title | as_crispy_field }}</h3>
+                        {{ form.description | as_crispy_field }}
+                        {% if ticket.image %}
+                            <div class="p-3">
+                                <img src="{{ ticket.image.url }}" class="img-fluid" alt="Ticket Image">
+                            </div>
+                        {% endif%}
+                    </div>
+                    <div class="border border-white  pb-5 pt-2">
+                        Critique
+                        <div class="p-3">
+                            <div class="p-3">
+                                {{ form.headline | as_crispy_field }}
+                            </div>
+                            <div class="p-3">
+                                <label for="id_rating" class="form-label">Note</label>
+                                <div class="row">
+                                    {% for rate in review_form.rating %}
+                                        <div class="col">
+                                            {{ rate }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="p-3">
+                                {{ form.body | as_crispy_field}}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                        <div class="border border-white px-2 pb-5 pt-2">
+                            <div class="p-3">
+                                <div class="p-3">
+                                    {{ form.title | as_crispy_field }}
+                                </div>
+                                <div class="p-3">
+                                    {{ form.description | as_crispy_field}}
+                                </div>
+                                <div class="p-3">
+                                    <img src="{% get_media_prefix %}{{ old_image }}">
+                                </div>
+                                <div class="p-3">
+                                    {{ form.image }}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                <div class="position-absolute bottom-0 end-0 p-5">
+                    <button type="submit" class="btn btn-primary">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}

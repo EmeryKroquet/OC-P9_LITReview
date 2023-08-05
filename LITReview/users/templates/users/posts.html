@@ -1,100 +1,84 @@
 {% extends 'partials/base.html' %}
-
 {% block content %}
-  <h1>{{ title }}</h1>
-  <h2>Tickets</h2>
-  <form method="post">
-    {% for post in posts%}
-
-      {% comment %} ticket {% endcomment%}
-      {% if post.headline is None%}
-      <div class="p-5">
-        <div class="position-relative">
-          <div class="border border-secondary p-2">
-
-            {% if post.user.username == user.username %}
-              <p> Vous avez demandé une critique</p>
-            {%else%}
-              <p> {{ post.user.username}} a demandé une critique</p>
-            {% endif%}
-
-            <div class="position-absolute top-0 end-0 p-2">{{ post.time_created }}</div>
-            <h3>{{post.title}}</h3>
-            {{post.description}}
-            {% if post.image %}
-              <div class="p-3">
-                <img src={{ post.image.url }}>
-              </div>
-            {% endif %}
-
-            {% if post.user == request.user %}
-              <div class="position-absolute bottom-0 end-0 p-2">
-                <a href="/modify/ticket/{{ post.id }}" class="btn btn-primary">Modifier</a>
-                <a href="/delete/ticket/{{ post.id }}" class="btn btn-outline-danger">Supprimer</a>
-              </div>
-            {% else %}
-              <div class="position-absolute bottom-0 end-0 p-2">
-                <a href="/create/{{ post.id }}" class="btn btn-primary">Créer une critique</a>
-              </div>
-            {% endif %}
-            </div>
-          </div>
-        </div>
-    {% comment %} review {% endcomment %}
-    {% else %}
-      <div class="p-5">
-        <div class="position-relative">
-          <div class="border border-secondary p-2">
-
-              {% if post.user.username == user.username %}
-                <p>Vous avez publié une critique</p>
-            {% else %}
-                <p>{{ post.user.username }} a publié une critique</p>
-            {% endif %}
-
-            <div class="position-absolute top-0 end-0 p-2">{{ post.time_created }}</div>
-            <h3>{{ post.headline }} -
-                {% for i in range %}
-                {% if post.rating > i  %}
-                                    &#9733
-                                    {% else %}
-                                    &#9734
+    <div class="container mt-5">
+        {% for post in data %}
+            <div class="p-4 border rounded mb-4">
+                <div class="position-relative">
+                    <div class="border border-secondary p-3">
+                        {% if post.headline is None %}
+                            {# Ticket #}
+                            {% if post.user.username == user.username %}
+                                <p class="mb-0">Vous avez demandé une critique</p>
+                            {% else %}
+                                <p class="mb-0">{{ post.user.username }} a demandé une critique</p>
+                            {% endif %}
+                            <div class="position-absolute top-0 end-0 p-2">{{ post.time_created }}</div>
+                            <h3 class="mb-3">{{ post.title }}</h3>
+                            <p class="mb-3">{{ post.description }}</p>
+                            {% if post.image %}
+                                <div class="p-3">
+                                    <img src="{{ post.image.url }}" class="img-fluid" alt="Post Image">
+                                </div>
+                            {% endif %}
+                            {% if post.user == request.user %}
+                                <div class="position-absolute bottom-0 end-0">
+                                    <a href="/modify/ticket/{{ post.id }}" class="btn btn-primary me-2">Modifier</a>
+                                    <a href="/delete/ticket/{{ post.id }}" class="btn btn-danger">Supprimer</a>
+                                </div>
+                            {% else %}
+                                <div class="position-absolute bottom-0 end-0">
+                                    <a href="/create/{{ post.id }}" class="btn btn-primary">Créer une critique</a>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            {# Review #}
+                            {% if post.user.username == user.username %}
+                                <p class="mb-0">Vous avez publié une critique</p>
+                            {% else %}
+                                <p class="mb-0">{{ post.user.username }} a publié une critique</p>
+                            {% endif %}
+                            <div class="position-absolute top-0 end-0 p-2">{{ post.time_created }}</div>
+                            <h3 class="mb-3">{{ post.headline }} -
+                                {% for _ in range_range %}
+                                    {% if forloop.counter0 >= post.rating %}
+                                        <p class="rating__off">{{ rating_char_off }}</p>
+                                {% else %}
+                                        <p class="rating__on">{{ rating_char_on }}</p>
+                                        &#9733;
+                                        &#9734;
                                     {% endif %}
                                 {% endfor %}
-            </h3>
-            {{ post.body }}
-
-            {% if post.user == request.user %}
-              <div class="position-absolute bottom-0 end-0 p-2">
-                <a href="/modify/review/{{ post.id }}" class="btn btn-primary">Modifier</a>
-                <a href="/delete/review/{{ post.id }}" class="btn btn-outline-danger">Supprimer</a>
-            </div>
-            {% endif %}
-
-            <div class="px-2 pb-5">
-              <div class="position-relative">
-                <div class="border border-secondary p-2">
-                  {% if post.ticket.user.username == user.username%}
-                  <p> Vous avez demandé une critique</p>
-                  {% else %}
-                  <p>@{{ post.ticket.user.username }} a demandé une critique</p>
-                  {% endif %}
-
-                  <div class="position-absolute top-0 end-0 p-2">{{ post.ticket.time_created }}</div>
-                  <h3>{{ post.ticket.title }}</h3>
-                  {{ post.ticket.description }}
-                  {% if post.ticket.image %}
-                  <div class="p-3">
-                    <img src={{ post.ticket.image.url }}>
-                  </div>
-                  {% endif %}
+                            </h3>
+                            <p class="mb-3">{{ post.body }}</p>
+                            {% if post.user == request.user %}
+                                <div class="position-absolute bottom-0 end-0">
+                                    <a href="/modify/review/{{ post.id }}" class="btn btn-primary me-2">Modifier</a>
+                                    <a href="/delete/review/{{ post.id }}" class="btn btn-danger">Supprimer</a>
+                                </div>
+                            {% endif %}
+                            <div class="px-2 pb-4">
+                                <div class="position-relative">
+                                    <div class="border border-secondary p-3">
+                                        {% if post.ticket.user.username == user.username %}
+                                            <p class="mb-0">Vous avez demandé une critique</p>
+                                        {% else %}
+                                            <p class="mb-0">{{ post.ticket.user.username }} a demandé une critique</p>
+                                        {% endif %}
+                                        <div class="position-absolute top-0 end-0 p-2">{{ post.ticket.time_created }}</div>
+                                        <h3 class="mb-3">{{ post.ticket.title }}</h3>
+                                        <p class="mb-3">{{ post.ticket.description }}</p>
+                                        {% if post.ticket.image %}
+                                            <div class="p-3">
+                                                <img src="{{ post.ticket.image.url }}" class="img-fluid" alt="Ticket Image">
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
-      {%endif%}
-    {%endfor%}
-  </form>
+        {% endfor %}
+    </div>
 {% endblock %}

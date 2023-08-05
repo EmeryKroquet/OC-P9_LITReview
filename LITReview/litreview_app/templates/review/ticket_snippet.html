@@ -1,0 +1,35 @@
+<div class="card p-4 my-4">
+  <div class="card-body">
+    <h5 class="card-title">{{ ticket.title }}</h5>
+    <h6 class="card-subtitle mb-2 text-muted">asked by: {% if ticket.user == user %} Vous {% else %} {{ ticket.user }} {% endif %}</h6>
+    <h6 class="card-subtitle mb-2 text-muted">date: {{ ticket.time_created }}</h6>
+    <p class="card-text">{{ ticket.description }}</p>
+
+    {% if request.resolver_match.url_name == 'flux' %}
+      {% if ticket in tickets_reviewed_by_user %}
+        <h6>You have already reviewed this ticket</h6>
+      {% else %}
+        <a href="{% url 'create_review' ticket_id=ticket.id %}">
+          <button class="btn btn-primary btn-large">créer une critique</button>
+        </a>
+      {% endif %}
+    {% endif %}
+
+    {% if ticket.image %}
+      <img class="card-img-top img-fluid" src="{{ ticket.image.url }}" alt="{{ ticket.title }}">
+    {% endif %}
+
+    {% if request.resolver_match.url_name == 'posts' %}
+      {% if ticket.user == user %}
+        <div class="d-flex justify-content-between mt-3">
+          <a href="{% url 'create_ticket' ticket_id=ticket.id%}">
+            <button class="btn btn-primary btn-large">Modifier</button>
+          </a>
+          <a href="{% url 'delete_ticket' ticket_id=ticket.id %}">
+            <button class="btn btn-danger btn-large">Supprimer</button>
+          </a>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>

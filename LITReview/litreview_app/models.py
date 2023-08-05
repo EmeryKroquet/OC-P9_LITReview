@@ -3,9 +3,7 @@ from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
-RATING_CHAR_ON = '★'
-RATING_CHAR_OFF = '☆'
-RATING_RANGE = range(5)
+
 
 class Ticket(models.Model):
     objects = None
@@ -23,9 +21,12 @@ class Ticket(models.Model):
     def __str__(self):
         return self.title
 
+RATING_RANGE = range(5)
+RATING_CHAR_ON = '★'
+RATING_CHAR_OFF = '☆ '
 class Review(models.Model):
     ticket = models.ForeignKey(to=Ticket, on_delete=models.CASCADE)
-    rating = models.PositiveSmallIntegerField(default=1, null=True, blank=True,
+    rating = models.PositiveSmallIntegerField(
         # validates that rating must be between 0 and 5
         validators=[MinValueValidator(0), MaxValueValidator(5)])
     headline = models.CharField(max_length=128)
@@ -33,8 +34,6 @@ class Review(models.Model):
     user = models.ForeignKey(
         to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     time_created = models.DateTimeField(auto_now_add=True)
-    def __str__(self):
-        return self.headline
 
 class UserFollows(models.Model):
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL,

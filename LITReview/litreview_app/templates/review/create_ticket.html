@@ -19,10 +19,8 @@
         {{ form|crispy }}
         <div class="row">
             <div class="col">
-            <a href="{% url 'flux' %}" class="btn btn-secondary">Annuler</a>
-          </div>
-            <div class="col">
-            <button type="submit" class="btn btn-primary">Créer</button>
+              <a class="btn btn-outline-primary me-md-2" type="button" href="javascript:history.back()">Retourner</a>
+            <button type="submit" class="btn btn-primary">Envoyer</button>
           </div>
           </div>
         </form>

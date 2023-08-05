@@ -1,0 +1,57 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="container py-5">
+            {% if ticket %}
+                <p class="text-center">Modifier votre critique</p>
+                <div class="border border-secondary p-2">
+                    Vous êtes en train de poster en réponse à {{ ticket.user.username }}
+                    <div class="border border-secondary p-2">
+                        <p>{{ ticket.user.username }} a publié un ticket </p>
+                        <div class="position-absolute top-0 end-0 p-5">{{ ticket.time_created }}</div>
+                        <h3>{{ form | crispy}}</h3>
+                        {% if ticket.image %}
+                            <div class="p-3">
+                                <img src="{{ ticket.image.url }}" class="img-fluid" alt="Ticket Image">
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="border border-secondary p-2 mt-5">
+                    <p class="text-center">Critique</p>
+                    <div class="p-3">
+                        {{ form | crispy }}
+                        <div class="row">
+                            {% for rate in form.rating %}
+                                <div class="col">
+                                    {{ rate }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {{ form.body | as_crispy_field }}
+                    </div>
+                </div>
+
+            {% else %}
+                <p class="text-center">Modifier votre ticket</p>
+                <div class="p-3">
+                    {{ form | crispy }}
+                    <div class="p-3">
+                        {% if ticket.image %}
+                            <img src="{{ ticket.image.url }}" class="img-fluid" alt="Ticket Image">
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+            <div class="col">
+              <a class="btn btn-outline-primary me-md-2" type="button" href="javascript:history.back()">Retourner</a>
+            <button type="submit" class="btn btn-primary">Envoyer</button>
+          </div>
+        </div>
+    </form>
+{% endblock %}

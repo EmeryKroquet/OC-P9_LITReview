@@ -1,0 +1,12 @@
+{% extends "partials/base.html" %}
+
+{% block content %}
+<section class="delete mt-4">
+    <h2 class="mb-3">Supprimer un utilisateur</h2>
+    <p>Voulez-vous vous désabonner de {{object.followed_user.username }}?</p>
+    <form method="POST">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Se désabonner</button>
+    </form>
+</section>
+{% endblock %}
